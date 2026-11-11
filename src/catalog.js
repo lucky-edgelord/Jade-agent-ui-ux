@@ -52,6 +52,22 @@ export const ELEMENTS = {
   },
   'jade-markdown': { description: 'Safe markdown (with copyable, highlighted code blocks).', attributes: { text: 'markdown (or the element\'s text content)' }, properties: { text: '' }, methods: { 'append(delta)': 'streaming' }, parts: ['content'] },
   'jade-code': { description: 'A code block with copy and highlighting.', attributes: { lang: '', code: 'or the text content' }, properties: { code: '', lang: '' }, parts: ['code', 'bar'] },
+  'jade-auth': {
+    description: 'Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server; signed in, shows who and Sign out. Server field errors appear on their fields.',
+    attributes: { base: 'the server URL (else setBase(), <meta name="jade-base">, or this page)', mode: 'signin | signup | reset' },
+    properties: { client: '(read-only) the Jade Agent Base client' }, methods: { 'show(mode)': 'switch between signin, signup and reset' },
+    events: { 'jade-auth': '{ user, mode } after signing in or up', 'jade-signout': '' }, parts: ['card', 'form', 'submit'],
+  },
+  'jade-pricing': {
+    description: "The server's plans as cards (price, limits), the user's plan marked, and Subscribe buttons that open Stripe Checkout.",
+    attributes: { base: 'the server URL', currency: 'e.g. USD (default), EUR' }, properties: { navigate: '(url) => void, how to open Checkout (default location.assign)', plans: '(read-only) the plans' },
+    methods: { 'load()': 'reload' }, events: { 'jade-checkout': '{ plan, url } (cancelable)', 'jade-needs-signin': '{ plan } when signed out' }, parts: ['grid', 'plan', 'subscribe'],
+  },
+  'jade-account': {
+    description: "The signed-in user's plan and subscription, usage this month against the plan's limits, Manage billing (Stripe portal), and API keys (create, shown once with Copy; revoke).",
+    attributes: { base: 'the server URL', currency: 'e.g. USD' }, properties: { navigate: '(url) => void, how to open the portal' },
+    methods: { 'load()': 'reload' }, events: { 'jade-key-created': '{ id, prefix }', 'jade-key-revoked': '{ id }', 'jade-portal': '{ url } (cancelable)' }, parts: ['card', 'plan', 'manage', 'keys', 'create-key', 'new-key'],
+  },
   'jade-theme-toggle': { description: 'Cycles auto/light/dark and remembers it; with `presets`, also a preset picker.', attributes: { presets: 'show the preset picker' } },
 };
 

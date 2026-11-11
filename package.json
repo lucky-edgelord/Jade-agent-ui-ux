@@ -1,6 +1,6 @@
 {
   "name": "jade-agent-ui-ux",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Themeable, lazy-loaded web components for AI agents, loadable from a CDN: a streaming agent chat with tool calls and approvals, and surfaces an agent can build UI on with declarative JSON. Made for Jade Agent Kit.",
   "type": "module",
   "main": "dist/jade-ui.js",

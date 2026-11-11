@@ -14,13 +14,15 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 - **A catalog for agents**: [`dist/catalog.json`](dist/catalog.json) and [`dist/llms.txt`](dist/llms.txt) describe
   every element, prop, event, CSS part and surface component, so a coding agent can build pages with it too.
 - **Theming** with `--jade-*` design tokens: four presets, light/dark/auto, density, radius, `::part()`, and scoped themes.
+- **A storefront for Jade Agent Base**: `<jade-auth>` (sign in, sign up, reset), `<jade-pricing>` (plans with Stripe
+  Checkout) and `<jade-account>` (plan, usage against limits, the billing portal, API keys).
 - Also `<jade-markdown>` (safe, streaming), `<jade-code>`, `<jade-message>`, `<jade-composer>`, `<jade-tool-call>`
   and `<jade-theme-toggle>`.
 
 ## Quick start
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.0.0/dist/jade-ui.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/jade-ui.js"></script>
 
 <jade-chat style="height:100vh" suggestions='["What can you do?", "Make me a form"]' attach></jade-chat>
 
@@ -34,7 +36,7 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 
 `connect(kit, options)` makes a kit agent (`kit.agent(options)`). It adds approval cards for the tools in `approve`,
 and the UI tools with a short guide to the catalog in the system prompt (`ui: false` turns that off). Always pin a
-version (`@v1.0.0`). Open [`examples/index.html`](examples/index.html) for a demo that runs without a model.
+version (`@v1.1.0`). Open [`examples/index.html`](examples/index.html) for a demo that runs without a model.
 
 ### Any other backend
 
@@ -62,6 +64,7 @@ and each theme preset when it is chosen.
 | `surface.js` | `<jade-surface>` appears, or an agent first builds UI | 14.7 KB |
 | `surface/layout.js`, `content.js`, `inputs.js`, `data.js` | a spec uses one of their components | 1.3, 1.0, 2.1, 1.5 KB |
 | `agent-tools.js` (+ catalog) | `chat.connect()` or `uiTools()` | 9.6 KB |
+| `auth.js`, `pricing.js`, `account.js` (+ the base client) | the element appears | 8.0, 8.1, 9.1 KB |
 | `themes/midnight.js`, `paper.js`, `contrast.js` | that preset is chosen | 0.3 KB each |
 
 ```js
@@ -111,6 +114,26 @@ jade-surface::part(card) { border-width: 2px; }
 | Input | Grows with the text; Enter sends, Shift+Enter is a new line; attach, paste or drop images (`attach`); sends while busy are queued. |
 
 Events: `jade-run`, `jade-done`, `jade-tool`, `jade-action`, `jade-approval`, and `jade-send` without a backend.
+
+## A storefront for Jade Agent Base
+
+[Jade Agent Base](https://github.com/lucky-edgelord/jade-agent-base) lets an agent run a business that sells model
+access: plans, Stripe billing and API keys. Three elements give its customers the pages they need:
+
+```html
+<meta name="jade-base" content="https://shop.example.com">   <!-- or a base="…" attribute on each element -->
+<jade-auth></jade-auth>          <!-- sign in, create an account, reset a password -->
+<jade-pricing currency="USD"></jade-pricing>   <!-- plans, with Subscribe opening Stripe Checkout -->
+<jade-account></jade-account>    <!-- plan, usage this month, Manage billing, API keys -->
+```
+
+- They share one signed-in session per server (kept in `localStorage`) and update together when someone signs in,
+  out, or pays.
+- Errors from the server appear on the fields they are about. Signed out, Subscribe fires `jade-needs-signin`.
+- A new API key is shown once, with Copy.
+- `navigate` (a property) changes how Checkout and the portal open; the default is the same tab.
+- In code: `const base = await baseClient(url)`, then `signIn`, `signUp`, `plans`, `usage`, `keys`, `createKey`,
+  `checkout`, `portal`.
 
 ## UI an agent builds: surfaces
 
@@ -186,8 +209,9 @@ JUI_SRC=1 node tests/run.mjs   # the same tests against src/
 node scripts/screenshots.mjs   # screenshots of the demo, desktop light and phone dark
 ```
 
-`tests/kit_test.mjs` runs the chat against the real Jade Agent Kit when it is checked out next to this repository
-(or `JAK_DIR=…`). `dist/` is committed for jsDelivr, and CI fails if it is out of date. Release: bump `version` in
+`tests/kit_test.mjs` runs the chat against the real Jade Agent Kit, and `tests/storefront_test.mjs` runs the account
+elements against a real Jade Agent Base (built with Go) with a stand-in for Stripe, when they are checked out next to
+this repository (or `JAK_DIR=…`, `JAB_DIR=…`). `dist/` is committed for jsDelivr, and CI fails if it is out of date. Release: bump `version` in
 `package.json` and `VERSION` in `src/index.js`, `npm test`, commit, then tag `vX.Y.Z`.
 
 ## License

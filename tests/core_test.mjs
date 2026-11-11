@@ -2,7 +2,7 @@
 import { start, sleep } from './_harness.mjs';
 const t = await start(); const { ok, ev } = t;
 
-ok((await ev(() => UI.VERSION)) === '1.0.0', 'VERSION');
+ok((await ev(() => UI.VERSION)) === '1.1.0', 'VERSION');
 ok(t.loaded().every(f => /^(jade-ui|theme|index|chunk-[\w]+)\.js$/.test(f)), 'importing the loader fetches only the core: ' + t.loaded().join(', '));
 // nothing is defined until it appears
 ok(!(await ev(() => !!customElements.get('jade-chat'))), 'jade-chat is not loaded before it is used');
@@ -37,5 +37,5 @@ ok(await ev(() => getComputedStyle(document.querySelector('#scoped jade-markdown
 ok(await ev(() => getComputedStyle(document.querySelector('jade-markdown').shadowRoot.querySelector('.md')).getPropertyValue('--jade-accent').trim().length > 0), 'tokens reach inside shadow roots');
 // catalog lazily
 const cat = await ev(async () => { const c = await UI.catalog(); return { n: Object.keys(c.COMPONENTS).length, p: c.prompt().length, el: Object.keys(c.ELEMENTS).length }; });
-ok(cat.n >= 25 && cat.el === 8 && cat.p > 2000, `catalog: ${cat.n} components, ${cat.el} elements, prompt ${cat.p} chars`);
+ok(cat.n >= 25 && cat.el === 11 && cat.p > 2000, `catalog: ${cat.n} components, ${cat.el} elements, prompt ${cat.p} chars`);
 await t.done();
