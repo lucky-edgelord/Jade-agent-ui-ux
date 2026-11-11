@@ -26,18 +26,20 @@ form.inline{flex-direction:row;align-items:flex-end;gap:8px}form.inline label{fl
   static observedAttributes = ['base', 'currency'];
   constructor() { super(); this._onChange = () => this.load(); this.navigate = url => location.assign(url); }
   get client() { return baseClient(this.getAttribute('base') || undefined); }
-  connectedCallback() { this._bind(); this.load(); }
-  disconnectedCallback() { this._c?.removeEventListener('change', this._onChange); }
-  attributeChangedCallback() { if (this.isConnected) { this._bind(); this.load(); } }
+  connectedCallback() { this._up = true; this._bind(); this.load(); }
+  disconnectedCallback() { this._up = false; this._c?.removeEventListener('change', this._onChange); }
+  attributeChangedCallback(n, o, v) { if (this._up && o !== v) { this._bind(); this.load(); } }
   _bind() { const c = this.client; if (c !== this._c) { this._c?.removeEventListener('change', this._onChange); this._c = c; c.addEventListener('change', this._onChange); } }
   async load() {
     const c = this.client;
-    if (!c.signedIn) { this.shadowRoot.replaceChildren(h('div', { class: 'card muted', part: 'card', text: 'Sign in to see your plan, usage and API keys.' })); return; }
+    if (!c.signedIn) { this._seq = (this._seq || 0) + 1; this.shadowRoot.replaceChildren(h('div', { class: 'card muted', part: 'card', text: 'Sign in to see your plan, usage and API keys.' })); return; }
     this.shadowRoot.replaceChildren(h('div', { class: 'card', 'aria-busy': 'true' }, h('div', { class: 'skel', style: 'width:30%' }), h('div', { class: 'skel', style: 'margin-top:12px' })));
+    const seq = this._seq = (this._seq || 0) + 1;
     try {
       const [usage, bill, keys] = await Promise.all([c.usage(), c.billing().catch(() => null), c.keys()]);
+      if (seq !== this._seq) return; // a newer load is under way
       this.render(usage, bill, keys);
-    } catch (e) { this.shadowRoot.replaceChildren(h('div', { class: 'err', role: 'alert', text: 'Your account could not be loaded: ' + e.message })); }
+    } catch (e) { if (seq === this._seq) this.shadowRoot.replaceChildren(h('div', { class: 'err', role: 'alert', text: 'Your account could not be loaded: ' + e.message })); }
   }
   render(usage, bill, keys) {
     const cur = this.getAttribute('currency') || 'USD'; const p = usage.plan || {}; const m = usage.month || {};
