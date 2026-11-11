@@ -3,6 +3,12 @@
 Web components for AI agents, loaded from a CDN with one import. They are themeable, lazy all the way down, and made
 for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agent backend works too.
 
+**Where it fits.** UI/UX is the presentation layer of the Jade stack: [Jade Vault](https://github.com/lucky-edgelord/jade-vault)
+is the control plane, [Jade Agent Base](https://github.com/lucky-edgelord/jade-agent-base) the resource plane,
+[Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit) the embeddable subset of Vault, and
+[Jade Agent Stack](https://github.com/lucky-edgelord/jade-agent-stack) the client toolkit that builds sites from these
+components (`jade site build`).
+
 - **`<jade-chat>`**: a complete agent chat. It streams text and thinking, shows tool calls (and asks before the tools
   you name), and has stop, regenerate, edit, retry, copy, suggestions and image attachments. It stays at the bottom
   unless the person scrolls up to read, with a "jump to latest" button, and screen readers hear one announcement per
@@ -31,7 +37,7 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 <jade-chat style="height:100vh" suggestions='["What can you do?", "Make me a form"]' attach></jade-chat>
 
 <script type="module">
-  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.0.0/dist/jade-agent-kit.js';
+  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.1.0/dist/jade-agent-kit.js';
   const kit = await createKit({ ollamaKey: '…', persist: 'my-app' });
   await customElements.whenDefined('jade-chat');
   await document.querySelector('jade-chat').connect(kit, { brain: true, approve: ['bash', 'write', 'edit'] });

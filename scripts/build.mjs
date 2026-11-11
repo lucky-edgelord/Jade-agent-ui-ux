@@ -40,7 +40,7 @@ fs.writeFileSync('dist/llms.txt', `# Jade Agent UI/UX ${pkg.version}
 \`\`\`html
 <script type="module">
   import { setTheme } from '${CDN}jade-ui.js';
-  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.0.0/dist/jade-agent-kit.js';
+  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.1.0/dist/jade-agent-kit.js';
   const kit = await createKit({ ollamaKey: '…' });
   await document.querySelector('jade-chat').connect(kit, { approve: ['bash', 'write', 'edit'] });
 </script>
