@@ -18,6 +18,14 @@ export const ELEMENTS = {
     slots: { header: 'above the conversation', empty: 'replaces the empty state' },
     parts: ['log', 'list', 'empty', 'suggestions', 'jump', 'composer', 'message', 'bubble', 'text', 'thinking', 'actions', 'name', 'error', 'composer-form', 'composer-input', 'composer-send'],
   },
+  'jade-chat-widget': {
+    description: 'A floating chat button in a corner that opens a chat panel (customer service, help desks, sales, an assistant on any page). The <jade-chat> inside loads on the first open; on small screens the panel fills the screen. Esc closes; a reply that arrives while closed shows a dot.',
+    attributes: { title: 'panel heading (default "Chat with us")', subtitle: 'line under it', greeting: 'empty-state heading', suggestions: 'JSON array of starter prompts', placeholder: 'composer placeholder', label: "the button's accessible name", position: 'bottom-right | bottom-left', open: 'open (reflects)' },
+    properties: { handler: 'async (text, reply, ctx) => … (as <jade-chat>)' },
+    methods: { 'open()': '', 'close()': '', 'toggle()': '', 'chat()': '→ Promise of the inner <jade-chat>', 'connect(kit, opts)': 'a Jade Agent Kit agent (as <jade-chat>.connect)', 'send(text)': 'open and send as the person' },
+    events: { 'jade-open': '', 'jade-close': '' }, parts: ['button', 'panel', 'header', 'close', 'chat'],
+    css: { '--jade-widget-width': '380px', '--jade-widget-height': '560px', '--jade-widget-offset': '20px', '--jade-widget-z': '2147483000' },
+  },
   'jade-message': {
     description: 'One chat turn. Assistant turns stream blocks: thinking, markdown text, tool calls and surfaces.',
     attributes: { role: 'user | assistant | system', name: 'label shown above it', actions: 'space-separated: copy edit regenerate', streaming: '(read-only) while streaming', kind: 'action for surface-action messages' },

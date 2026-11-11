@@ -14,6 +14,8 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 - **A catalog for agents**: [`dist/catalog.json`](dist/catalog.json) and [`dist/llms.txt`](dist/llms.txt) describe
   every element, prop, event, CSS part and surface component, so a coding agent can build pages with it too.
 - **Theming** with `--jade-*` design tokens: four presets, light/dark/auto, density, radius, `::part()`, and scoped themes.
+- **A floating chat widget**: `<jade-chat-widget>`, a corner button that opens a chat panel for customer service or
+  any assistant; the chat loads on first open.
 - **A storefront for Jade Agent Base**: `<jade-auth>` (sign in, sign up, reset, and Continue with Google, Facebook, GitHub, …), `<jade-pricing>` (plans with Stripe
   Checkout) and `<jade-account>` (plan, usage against limits, the billing portal, API keys).
 - Also `<jade-markdown>` (safe, streaming), `<jade-code>`, `<jade-message>`, `<jade-composer>`, `<jade-tool-call>`
@@ -114,6 +116,20 @@ jade-surface::part(card) { border-width: 2px; }
 | Input | Grows with the text; Enter sends, Shift+Enter is a new line; attach, paste or drop images (`attach`); sends while busy are queued. |
 
 Events: `jade-run`, `jade-done`, `jade-tool`, `jade-action`, `jade-approval`, and `jade-send` without a backend.
+
+## A floating chat widget
+
+```html
+<jade-chat-widget title="Acme support" subtitle="We reply in minutes" greeting="Hi! How can we help?"
+  suggestions='["Where is my order?", "Talk to a person"]'></jade-chat-widget>
+<script type="module">
+  const w = document.querySelector('jade-chat-widget');
+  w.handler = async (text, reply) => { reply.append('…'); };   // any backend, or: await w.connect(kit, { model, system })
+</script>
+```
+
+Only the button loads with the page; `<jade-chat>` loads when the panel first opens. `position="bottom-left"`,
+`--jade-widget-width` / `--jade-widget-height` and `::part(button)` change where and how it shows.
 
 ## A storefront for Jade Agent Base
 
