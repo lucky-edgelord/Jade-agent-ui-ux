@@ -2,7 +2,7 @@
 import { start, sleep } from './_harness.mjs';
 const t = await start(); const { ok, ev } = t;
 
-ok((await ev(() => UI.VERSION)) === '1.1.0', 'VERSION');
+ok((await ev(() => UI.VERSION)) === '1.2.0', 'VERSION');
 ok(t.loaded().every(f => /^(jade-ui|theme|index|chunk-[\w]+)\.js$/.test(f)), 'importing the loader fetches only the core: ' + t.loaded().join(', '));
 // nothing is defined until it appears
 ok(!(await ev(() => !!customElements.get('jade-chat'))), 'jade-chat is not loaded before it is used');

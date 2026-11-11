@@ -53,10 +53,10 @@ export const ELEMENTS = {
   'jade-markdown': { description: 'Safe markdown (with copyable, highlighted code blocks).', attributes: { text: 'markdown (or the element\'s text content)' }, properties: { text: '' }, methods: { 'append(delta)': 'streaming' }, parts: ['content'] },
   'jade-code': { description: 'A code block with copy and highlighting.', attributes: { lang: '', code: 'or the text content' }, properties: { code: '', lang: '' }, parts: ['code', 'bar'] },
   'jade-auth': {
-    description: 'Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server; signed in, shows who and Sign out. Server field errors appear on their fields.',
+    description: 'Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server, plus a "Continue with …" button for each OAuth2 provider the server has on (Google, Facebook, GitHub, …; an agent turns them on with auth_provider_set). Signed in, shows who and Sign out. Server field errors appear on their fields.',
     attributes: { base: 'the server URL (else setBase(), <meta name="jade-base">, or this page)', mode: 'signin | signup | reset' },
     properties: { client: '(read-only) the Jade Agent Base client' }, methods: { 'show(mode)': 'switch between signin, signup and reset' },
-    events: { 'jade-auth': '{ user, mode } after signing in or up', 'jade-signout': '' }, parts: ['card', 'form', 'submit'],
+    events: { 'jade-auth': '{ user, mode } after signing in or up (mode: signin, signup or the provider name)', 'jade-signout': '' }, parts: ['card', 'form', 'submit', 'providers', 'provider'],
   },
   'jade-pricing': {
     description: "The server's plans as cards (price, limits), the user's plan marked, and Subscribe buttons that open Stripe Checkout.",

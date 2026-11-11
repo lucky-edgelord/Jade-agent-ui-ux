@@ -1,12 +1,12 @@
-# Jade Agent UI/UX 1.1.0
+# Jade Agent UI/UX 1.2.0
 
-> Themeable, lazy-loaded web components for AI agents, from a CDN. Made for Jade Agent Kit. Load https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/jade-ui.js once;
-> each <jade-*> element downloads its module the first time it appears. Machine-readable: https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/catalog.json
+> Themeable, lazy-loaded web components for AI agents, from a CDN. Made for Jade Agent Kit. Load https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/jade-ui.js once;
+> each <jade-*> element downloads its module the first time it appears. Machine-readable: https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/catalog.json
 
 ## Use it
 ```html
 <script type="module">
-  import { setTheme } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/jade-ui.js';
+  import { setTheme } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/jade-ui.js';
   import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.0.0/dist/jade-agent-kit.js';
   const kit = await createKit({ ollamaKey: '…' });
   await document.querySelector('jade-chat').connect(kit, { approve: ['bash', 'write', 'edit'] });
@@ -74,12 +74,12 @@ Properties: code; lang
 CSS parts: code, bar
 
 ### <jade-auth>
-Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server; signed in, shows who and Sign out. Server field errors appear on their fields.
+Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server, plus a "Continue with …" button for each OAuth2 provider the server has on (Google, Facebook, GitHub, …; an agent turns them on with auth_provider_set). Signed in, shows who and Sign out. Server field errors appear on their fields.
 Attributes: base (the server URL (else setBase(), <meta name="jade-base">, or this page)); mode (signin | signup | reset)
 Properties: client ((read-only) the Jade Agent Base client)
 Methods: show(mode) (switch between signin, signup and reset)
-Events: jade-auth { user, mode } after signing in or up; jade-signout
-CSS parts: card, form, submit
+Events: jade-auth { user, mode } after signing in or up (mode: signin, signup or the provider name); jade-signout
+CSS parts: card, form, submit, providers, provider
 
 ### <jade-pricing>
 The server's plans as cards (price, limits), the user's plan marked, and Subscribe buttons that open Stripe Checkout.

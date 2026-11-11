@@ -1,5 +1,5 @@
-/*! Jade Agent UI/UX 1.1.0 | MIT | https://github.com/lucky-edgelord/Jade-agent-ui-ux */
-import{a as p,b as u,c as t,d as h}from"./chunk-AQVPYL43.js";import"./chunk-JMCPQBZY.js";var d=4e3,g=a=>{if(a==null)return"";if(typeof a!="object")return String(a);let e=Object.values(a).find(s=>typeof s=="string"&&s.trim())??JSON.stringify(a);return String(e).replace(/\s+/g," ").slice(0,80)},c=a=>typeof a=="string"?a:JSON.stringify(a,null,2),l=class extends p{static styles=`
+/*! Jade Agent UI/UX 1.2.0 | MIT | https://github.com/lucky-edgelord/Jade-agent-ui-ux */
+import{a as p,b as u,c as t,d as h}from"./chunk-CXEGVF4L.js";import"./chunk-5PLB4KF2.js";var d=4e3,g=a=>{if(a==null)return"";if(typeof a!="object")return String(a);let e=Object.values(a).find(s=>typeof s=="string"&&s.trim())??JSON.stringify(a);return String(e).replace(/\s+/g," ").slice(0,80)},c=a=>typeof a=="string"?a:JSON.stringify(a,null,2),l=class extends p{static styles=`
 :host{display:block;margin:6px 0}
 details{border:1px solid var(--jade-border);border-radius:calc(var(--jade-radius) * .66);background:var(--jade-surface);overflow:hidden}
 summary{display:flex;align-items:center;gap:8px;padding:6px 10px;cursor:pointer;list-style:none;font-size:.88em;min-height:34px}

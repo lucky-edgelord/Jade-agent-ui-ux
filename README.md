@@ -14,7 +14,7 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 - **A catalog for agents**: [`dist/catalog.json`](dist/catalog.json) and [`dist/llms.txt`](dist/llms.txt) describe
   every element, prop, event, CSS part and surface component, so a coding agent can build pages with it too.
 - **Theming** with `--jade-*` design tokens: four presets, light/dark/auto, density, radius, `::part()`, and scoped themes.
-- **A storefront for Jade Agent Base**: `<jade-auth>` (sign in, sign up, reset), `<jade-pricing>` (plans with Stripe
+- **A storefront for Jade Agent Base**: `<jade-auth>` (sign in, sign up, reset, and Continue with Google, Facebook, GitHub, …), `<jade-pricing>` (plans with Stripe
   Checkout) and `<jade-account>` (plan, usage against limits, the billing portal, API keys).
 - Also `<jade-markdown>` (safe, streaming), `<jade-code>`, `<jade-message>`, `<jade-composer>`, `<jade-tool-call>`
   and `<jade-theme-toggle>`.
@@ -22,7 +22,7 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 ## Quick start
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/jade-ui.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/jade-ui.js"></script>
 
 <jade-chat style="height:100vh" suggestions='["What can you do?", "Make me a form"]' attach></jade-chat>
 
@@ -36,7 +36,7 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 
 `connect(kit, options)` makes a kit agent (`kit.agent(options)`). It adds approval cards for the tools in `approve`,
 and the UI tools with a short guide to the catalog in the system prompt (`ui: false` turns that off). Always pin a
-version (`@v1.1.0`). Open [`examples/index.html`](examples/index.html) for a demo that runs without a model.
+version (`@v1.2.0`). Open [`examples/index.html`](examples/index.html) for a demo that runs without a model.
 
 ### Any other backend
 
@@ -132,8 +132,12 @@ access: plans, Stripe billing and API keys. Three elements give its customers th
 - Errors from the server appear on the fields they are about. Signed out, Subscribe fires `jade-needs-signin`.
 - A new API key is shown once, with Copy.
 - `navigate` (a property) changes how Checkout and the portal open; the default is the same tab.
-- In code: `const base = await baseClient(url)`, then `signIn`, `signUp`, `plans`, `usage`, `keys`, `createKey`,
-  `checkout`, `portal`.
+- **Sign in with Google, Facebook, GitHub, Apple, Microsoft, Discord, …** (OAuth2): when the server has a provider on
+  (an agent calls `auth_provider_set`; Jade Agent Base 0.5+), `<jade-auth>` shows "Continue with …" for it. A small
+  window opens at the provider and closes when they are done; PocketBase does the OAuth2 exchange. With password
+  sign-in off, only the provider buttons show.
+- In code: `const base = await baseClient(url)`, then `signIn`, `signUp`, `providers`, `signInWith('google')`, `plans`,
+  `usage`, `keys`, `createKey`, `checkout`, `portal`.
 
 ## UI an agent builds: surfaces
 

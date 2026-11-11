@@ -1,5 +1,5 @@
 {
- "version": "1.1.0",
+ "version": "1.2.0",
  "name": "jade-agent-ui-ux",
  "elements": {
   "jade-chat": {
@@ -229,7 +229,7 @@
    ]
   },
   "jade-auth": {
-   "description": "Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server; signed in, shows who and Sign out. Server field errors appear on their fields.",
+   "description": "Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server, plus a \"Continue with …\" button for each OAuth2 provider the server has on (Google, Facebook, GitHub, …; an agent turns them on with auth_provider_set). Signed in, shows who and Sign out. Server field errors appear on their fields.",
    "attributes": {
     "base": "the server URL (else setBase(), <meta name=\"jade-base\">, or this page)",
     "mode": "signin | signup | reset"
@@ -241,13 +241,15 @@
     "show(mode)": "switch between signin, signup and reset"
    },
    "events": {
-    "jade-auth": "{ user, mode } after signing in or up",
+    "jade-auth": "{ user, mode } after signing in or up (mode: signin, signup or the provider name)",
     "jade-signout": ""
    },
    "parts": [
     "card",
     "form",
-    "submit"
+    "submit",
+    "providers",
+    "provider"
    ]
   },
   "jade-pricing": {

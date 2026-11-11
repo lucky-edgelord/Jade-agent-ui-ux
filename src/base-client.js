@@ -59,8 +59,41 @@ export class BaseClient extends EventTarget {
   /** refresh the token and user (e.g. after paying) */
   async refresh() { if (!this.token) return null; const r = await this.fetch(`/api/collections/${this.collection}/auth-refresh`, { method: 'POST' }); this._set(r.token, r.record); return r.record; }
   async resetPassword(email) { await this.fetch(`/api/collections/${this.collection}/request-password-reset`, { method: 'POST', body: { email }, auth: false }); }
-  /** sign-in methods the server offers (password, OAuth2 providers) */
-  async authMethods() { return this.fetch(`/api/collections/${this.collection}/auth-methods`, { auth: false }); }
+  /** sign-in methods the server offers (password, OAuth2 providers); asked once */
+  authMethods() { return (this._methods ||= this.fetch(`/api/collections/${this.collection}/auth-methods`, { auth: false }).catch(e => { this._methods = null; throw e; })); }
+  /** the OAuth2 providers that are on: [{ name, displayName }] (none when the server cannot say) */
+  async providers() { try { const m = await this.authMethods(); return m?.oauth2?.enabled ? (m.oauth2.providers || []).map(p => ({ name: p.name, displayName: p.displayName || p.name })) : []; } catch { return []; } }
+  /**
+   * sign in with Google, Facebook, GitHub, … (OAuth2, done by PocketBase): a window opens at the provider and closes
+   * when they are done. Open the window yourself in the click handler and pass it as popup if you await anything
+   * first, or browsers block it. → the user
+   */
+  async signInWith(provider, { popup } = {}) {
+    popup ||= openPopup();
+    const fail = m => { try { popup?.close(); } catch {} throw new Error(m); };
+    if (!popup) fail('The sign-in window was blocked. Allow pop-ups for this site and try again.');
+    let es, timer;
+    try {
+      const p = ((await this.authMethods())?.oauth2?.providers || []).find(x => x.name === provider);
+      if (!p) fail(`Signing in with ${provider} is not available.`);
+      const redirectURL = this.url + '/api/oauth2-redirect';
+      // PocketBase passes the provider's answer to this page over its realtime channel; the state is our client id
+      es = new EventSource(this.url + '/api/realtime');
+      const clientId = await new Promise((ok, no) => { es.addEventListener('PB_CONNECT', e => ok(JSON.parse(e.data).clientId), { once: true }); es.onerror = () => no(new Error('Cannot reach the server. Check your connection and try again.')); });
+      const answer = new Promise((ok, no) => {
+        es.addEventListener('@oauth2', e => { try { ok(JSON.parse(e.data)); } catch (x) { no(x); } }, { once: true });
+        timer = setInterval(() => { if (popup.closed) no(Object.assign(new Error('The sign-in window was closed.'), { cancelled: true })); }, 400);
+      });
+      await this.fetch('/api/realtime', { method: 'POST', body: { clientId, subscriptions: ['@oauth2'] }, auth: false });
+      const u = new URL(p.authURL + redirectURL); u.searchParams.set('state', clientId);
+      popup.location.href = u.toString();
+      const a = await answer;
+      if (a.state !== clientId) throw new Error('The sign-in answer did not match. Please try again.');
+      if (a.error || !a.code) throw new Error(a.error ? `${p.displayName || provider} said: ${a.error}` : 'The sign-in was not completed.');
+      const r = await this.fetch(`/api/collections/${this.collection}/auth-with-oauth2`, { method: 'POST', body: { provider, code: a.code, codeVerifier: p.codeVerifier, redirectURL }, auth: false });
+      this._set(r.token, r.record); return r.record;
+    } finally { clearInterval(timer); es?.close(); try { popup.close(); } catch {} }
+  }
   // ---- plans, usage, keys, billing ----
   async plans() { return (await this.fetch('/api/collections/plans/records', { query: { sort: 'price_month', perPage: 50 }, auth: false })).items || []; }
   async usage() { return this.fetch('/api/gateway/me'); }
@@ -72,4 +105,12 @@ export class BaseClient extends EventTarget {
   async checkout(plan) { return (await this.fetch('/api/billing/checkout', { method: 'POST', body: { plan } })).url; }
   /** the Stripe customer portal → its URL */
   async portal() { return (await this.fetch('/api/billing/portal', { method: 'POST' })).url; }
+}
+
+/** a centred window for a provider's sign-in page (open it straight from a click) */
+export function openPopup(name = 'jade-oauth2') {
+  if (typeof window === 'undefined') return null;
+  const w = Math.min(500, screen.availWidth || 500), hh = Math.min(640, screen.availHeight || 640);
+  const left = (screen.availLeft || 0) + ((screen.availWidth || w) - w) / 2, top = (screen.availTop || 0) + ((screen.availHeight || hh) - hh) / 2;
+  return window.open('about:blank', name, `popup=yes,width=${w},height=${hh},left=${left},top=${top}`);
 }
