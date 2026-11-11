@@ -15,7 +15,7 @@ jobs:
       - uses: actions/setup-node@v4
         with: { node-version: 22 }
       - run: npm install --no-audit --no-fund
-      - run: npx playwright install --with-deps chromium
+      - run: npx playwright install chromium   # the runner has Chrome, so its libraries; no apt (its mirror can be down)
       - name: build and check dist/ is up to date
         run: |
           node scripts/build.mjs
