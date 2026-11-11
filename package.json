@@ -1,0 +1,17 @@
+{
+  "name": "jade-agent-ui-ux",
+  "version": "1.0.0",
+  "description": "Themeable, lazy-loaded web components for AI agents, loadable from a CDN: a streaming agent chat with tool calls and approvals, and surfaces an agent can build UI on with declarative JSON. Made for Jade Agent Kit.",
+  "type": "module",
+  "main": "dist/jade-ui.js",
+  "module": "dist/jade-ui.js",
+  "exports": { ".": "./dist/jade-ui.js", "./catalog.json": "./dist/catalog.json", "./src/*": "./src/*", "./dist/*": "./dist/*" },
+  "files": ["dist", "src", "LICENSE", "README.md"],
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node scripts/build.mjs && node tests/run.mjs"
+  },
+  "license": "MIT",
+  "repository": { "type": "git", "url": "https://github.com/lucky-edgelord/Jade-agent-ui-ux" },
+  "devDependencies": { "esbuild": "0.28.2", "playwright": "1.56.0" }
+}

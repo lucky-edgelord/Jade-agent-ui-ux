@@ -1,0 +1,117 @@
+# Jade Agent UI/UX 1.0.0
+
+> Themeable, lazy-loaded web components for AI agents, from a CDN. Made for Jade Agent Kit. Load https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.0.0/dist/jade-ui.js once;
+> each <jade-*> element downloads its module the first time it appears. Machine-readable: https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.0.0/dist/catalog.json
+
+## Use it
+```html
+<script type="module">
+  import { setTheme } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.0.0/dist/jade-ui.js';
+  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.0.0/dist/jade-agent-kit.js';
+  const kit = await createKit({ ollamaKey: '…' });
+  await document.querySelector('jade-chat').connect(kit, { approve: ['bash', 'write', 'edit'] });
+</script>
+<jade-chat style="height:100vh" suggestions='["What can you do?"]'></jade-chat>
+```
+
+## Theming
+setTheme({ preset, mode: 'auto'|'light'|'dark', density: 'compact'|'cozy'|'comfortable', radius, tokens, target }).
+Presets: jade, midnight, paper, contrast. Tokens (CSS custom properties): --jade-bg, --jade-surface, --jade-surface-2, --jade-fg, --jade-muted, --jade-border, --jade-accent, --jade-accent-fg, --jade-user, --jade-user-fg, --jade-code, --jade-ok, --jade-warn, --jade-danger, --jade-syn-k, --jade-syn-s, --jade-syn-n, --jade-syn-c, --jade-radius, --jade-space, --jade-font, --jade-mono, --jade-font-size, --jade-shadow, --jade-focus.
+Every element also exposes ::part() names (below).
+
+## Elements
+### <jade-chat>
+A complete agent chat: messages, streaming, thinking, tool calls with approval, stop, regenerate, edit, retry, copy, suggestions, image attachments, stick-to-bottom scrolling.
+Attributes: placeholder (composer placeholder); greeting (empty-state heading); suggestions (JSON array of starter prompts (strings or {label, prompt})); attach (allow image attachments); assistant-name (name shown on replies); hint (small text under the composer); busy ((read-only) set while running)
+Properties: agent (a Jade Agent Kit agent (or { prompt, abort, messages, onEvent })); handler (async (text, reply, { images, signal, history }) => string); suggestions (array of starter prompts); messages ((read-only) the jade-message elements); history ([{ role, content }] in handler mode); surfaces (Map of surface name → jade-surface the agent made); busy (true while running)
+Methods: connect(kit, { approve, ui, brain, …kit.agent options }) (make a kit agent with approvals and the UI tools); send(text, { images }) (send and run; resolves with the reply text); stop() (stop the run); regenerate() (answer the last message again); edit(text) (change the last user message and run again); clear() (remove all messages); addMessage({ role, content, name, images }) (add a message element); approval(tools) (an agent plugin that asks before the tools named); scrollToEnd(smooth) (jump to the latest message)
+Events: jade-send no agent or handler: { text, images, reply, signal }; write to reply and call reply.finish(); jade-run a run starts { text, message }; jade-done a run ends { text, message, error, stopped }; jade-tool a tool call { name, args }; jade-action a surface action { surface, name, data, values }; jade-approval an approval was answered { name, args, allowed }
+CSS parts: log, list, empty, suggestions, jump, composer, message, bubble, text, thinking, actions, name, error, composer-form, composer-input, composer-send
+
+### <jade-message>
+One chat turn. Assistant turns stream blocks: thinking, markdown text, tool calls and surfaces.
+Attributes: role (user | assistant | system); name (label shown above it); actions (space-separated: copy edit regenerate); streaming ((read-only) while streaming); kind (action for surface-action messages)
+Properties: text ((read-only) the text)
+Methods: begin() (start streaming); append(delta) (add text); setText(text) (replace text); thinking(delta) (add reasoning); tool(name, args) (a tool-call card → handle { done, fail, ask, answer }); surface(spec, name) (a surface → Promise<jade-surface>); meta(text) (small label (model)); finish({ stopped }) (end streaming); fail(error) (show an error with Retry); setImages(urls) (images above a user message)
+Events: jade-regenerate; jade-edit { text }; jade-retry; jade-finish { text, stopped, error }
+CSS parts: bubble, text, thinking, actions, name, error, note
+
+### <jade-composer>
+The message input: grows with text, Enter sends, Shift+Enter new line, Esc stops; image attach, paste and drop.
+Attributes: placeholder; busy (shows Stop instead of Send); disabled; attach (allow images); multiline (Enter makes a new line); hint (small text under it)
+Properties: value (the text); images (attached images [{ name, type, dataUrl, base64 }])
+Methods: submit(); stop(); focus(); addFiles(files)
+Events: jade-submit { text, images } (cancelable); jade-stop; jade-attach { files } that are not images
+CSS parts: form, input, send, attachments, hint
+
+### <jade-tool-call>
+A tool call card: name, arguments, status, result; ask() turns it into an approval card.
+Attributes: name; status (running | done | error | waiting | denied)
+Properties: args; result
+Methods: start(name, args); done(result); fail(error); ask({ message }) (Promise<boolean>); answer(ok)
+Events: jade-approval { name, args, allowed }; jade-approval-always { name }
+CSS parts: card, summary, name, body, args, result, approval
+
+### <jade-surface>
+Renders UI from a declarative spec (see SPEC and COMPONENTS). Agents build and change it; buttons send actions back.
+Attributes: name (the name agents address it by)
+Properties: data ((copy) the data model); spec ((copy) { root, components, data }); result (the last { ok, warnings, count }); onaction ((detail) => void)
+Methods: render(spec) (replace everything → Promise<{ ok, warnings, count }>); update({ components, remove, data, root }) (change part of it); setData(path, value); getData(path); clear()
+Events: jade-action { surface, name, data, values }; jade-change { surface, path, value }; jade-invalid { surface, fields }; jade-render { surface, warnings }
+CSS parts: root, c, c <component name in lower case> (e.g. ::part(card))
+
+### <jade-markdown>
+Safe markdown (with copyable, highlighted code blocks).
+Attributes: text (markdown (or the element's text content))
+Properties: text
+Methods: append(delta) (streaming)
+CSS parts: content
+
+### <jade-code>
+A code block with copy and highlighting.
+Attributes: lang; code (or the text content)
+Properties: code; lang
+CSS parts: code, bar
+
+### <jade-theme-toggle>
+Cycles auto/light/dark and remembers it; with `presets`, also a preset picker.
+Attributes: presets (show the preset picker)
+
+## Surfaces: UI an agent builds at runtime
+You can show the user interactive UI by calling ui_render with a spec.
+A surface spec is a flat list of components that point at their children by id, plus a data model.
+Shape: { "root": "<id>", "components": [{ "id": "<unique>", "component": "<name>", "props": { … }, "children": ["<id>", …] }], "data": { … } }
+Any prop can be a literal, {"$data": "/path"} (live from the data model), or a string with {{/path}} in it. Inside a List template, paths start with $item (e.g. "$item/title") and {{$index}} is the position.
+Inputs write to the data model at their "bind" path. Read it back with ui_read, or receive it with an action.
+A Button's action ("name" or { "name", "data" }) is sent back to the agent as a message: [ui action] … with the action's data and every value in the data model. Required fields are checked first.
+ui_update changes part of a surface: components with an existing id replace it, new ids are added, "remove" deletes ids, "data" merges into the model (or [{ path, value }]). Changing only data keeps what the person typed and where they are.
+Every component also takes "visible" (often a binding). Props marked * are required. Use only these components:
+- Column [children]: Stacks children vertically. Props: gap: number (space between children, in theme spacing steps (0-8, default 1.5)); align: stretch|start|center|end (horizontal alignment); padding: number (inner space in spacing steps).
+- Row [children]: Places children side by side; wraps on small screens unless wrap is false. Props: gap: number (space between children, in theme spacing steps (0-8, default 1.5)); align: center|start|end|stretch|baseline (vertical alignment); justify: start|center|end|between|around (horizontal distribution); wrap: boolean (wrap to new lines (default true)).
+- Grid [children]: A responsive grid of equal columns (fewer on narrow screens). Props: columns: number (columns on wide screens (default: as many as fit)); minWidth: number (narrowest a column may get, in px (default 180)); gap: number (space between children, in theme spacing steps (0-8, default 1.5)).
+- Card [children]: A bordered panel, optionally with a title. Props: title: string (heading); subtitle: string (smaller text under the title); tone: neutral|accent|ok|warn|danger (colour of the status); padding: number (inner space in spacing steps (default 2)).
+- Tabs: Tabs; each tab shows its own children. Props: tabs*: array ([{ "label": "Details", "children": ["id1", "id2"] }]); bind: path (keep the selected tab index in the data model).
+- Divider: A horizontal rule.
+- Spacer: Empty space; in a Row it pushes the next items to the end. Props: size: number (spacing steps (default: fill the row)).
+- Heading: A heading. Props: text*: string (the heading); level: number (1 (largest) to 4, default 2).
+- Text: Text with markdown (bold, lists, links, code). Props: text*: string (markdown); size: sm|md|lg (default md); muted: boolean (secondary colour); align: start|center|end (alignment).
+- Badge: A small status label. Props: text*: string (label); tone: neutral|accent|ok|warn|danger (colour of the status).
+- Image: An image (https or data:image URLs only). Props: src*: string (URL); alt*: string (description for screen readers); width: number (px); height: number (px); fit: cover|contain (how it fills width x height); rounded: boolean (round the corners).
+- Code: A code block with copy and highlighting. Props: code*: string (source); lang: string (language, e.g. js, py, sh, sql, json).
+- Alert: A highlighted message. Props: title: string (bold first line); text: string (markdown); tone: info|ok|warn|danger (default info).
+- Link: A link that opens in a new tab (http, https or mailto). Props: text*: string (link text); href*: string (URL).
+- Button: A button that sends an action back to the agent (and your app). Props: label*: string (text); action*: action ("name" or { "name", "data": {…}, "validate": true }. validate (default true) checks required fields first); variant: primary|secondary|ghost|danger (default secondary); disabled: boolean (greyed out); full: boolean (full width).
+- TextField: A one-line input bound to the data model. Props: label*: string (label); bind*: path (where the value lives, e.g. "/form/email"); type: text|email|number|url|tel|password|date|time|datetime-local|search (default text); placeholder: string (hint inside the field); required: boolean (must be filled before an action); help: string (small text under the field); min: number (number/date minimum); max: number (number/date maximum).
+- TextArea: A multi-line input bound to the data model. Props: label*: string (label); bind*: path (data path); rows: number (visible lines (default 4)); placeholder: string (hint); required: boolean (must be filled); help: string (small text under it).
+- Select: A dropdown bound to the data model. Props: label*: string (label); bind*: path (data path); options*: array (choices: strings, or { value, label }); placeholder: string (text when nothing is chosen); required: boolean (must be chosen).
+- RadioGroup: One choice out of a few, bound to the data model. Props: label*: string (label); bind*: path (data path); options*: array (choices: strings, or { value, label }); required: boolean (must be chosen).
+- Checkbox: A checkbox bound to a boolean. Props: label*: string (label); bind*: path (data path).
+- Switch: An on/off switch bound to a boolean. Props: label*: string (label); bind*: path (data path).
+- Slider: A range slider bound to a number. Props: label*: string (label); bind*: path (data path); min: number (default 0); max: number (default 100); step: number (default 1).
+- Stat: A key number with a label and optional change. Props: label*: string (what it measures); value*: string (the number or text); delta: string (change, e.g. "+12%"); tone: neutral|accent|ok|warn|danger (colour of the status); help: string (small text below).
+- Progress: A progress bar (no value: indeterminate). Props: value: number (0 to max); max: number (default 100); label: string (label).
+- Table: A table of rows (objects). Props: columns: array ([{ "key": "name", "label": "Name", "align": "start|end|center" }] (default: the first row's keys)); rows*: array (array of objects, or a binding {"$data": "/rows"}); empty: string (text when there are no rows).
+- List: A list. Items are markdown strings, or objects drawn with a template component that reads "$item/…". Props: items*: array (array, or a binding {"$data": "/todos"}); template: id (a component id drawn once per item (inside it, {"$data": "$item/title"} and "{{$item/title}}")); ordered: boolean (numbered); empty: string (text when the list is empty).
+- KeyValue: Label and value pairs. Props: items*: array ([{ "key": "Status", "value": "Shipped" }] or an object).
+Example: {"root":"root","components":[{"id":"root","component":"Card","props":{"title":"Book a table"},"children":["when","size","go"]},{"id":"when","component":"TextField","props":{"label":"Date","type":"date","bind":"/booking/date","required":true}},{"id":"size","component":"Slider","props":{"label":"Guests","bind":"/booking/guests","min":1,"max":12}},{"id":"go","component":"Button","props":{"label":"Book for {{/booking/guests}}","variant":"primary","action":{"name":"book","data":{"$data":"/booking"}}}}],"data":{"booking":{"date":"","guests":2}}}
+Keep UI small and purposeful: a form, a choice, a summary card or a table beats a wall of text when the user has to act or compare. Plain answers stay text.
