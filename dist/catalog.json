@@ -1,0 +1,987 @@
+{
+ "version": "1.0.0",
+ "name": "jade-agent-ui-ux",
+ "elements": {
+  "jade-chat": {
+   "description": "A complete agent chat: messages, streaming, thinking, tool calls with approval, stop, regenerate, edit, retry, copy, suggestions, image attachments, stick-to-bottom scrolling.",
+   "attributes": {
+    "placeholder": "composer placeholder",
+    "greeting": "empty-state heading",
+    "suggestions": "JSON array of starter prompts (strings or {label, prompt})",
+    "attach": "allow image attachments",
+    "assistant-name": "name shown on replies",
+    "hint": "small text under the composer",
+    "busy": "(read-only) set while running"
+   },
+   "properties": {
+    "agent": "a Jade Agent Kit agent (or { prompt, abort, messages, onEvent })",
+    "handler": "async (text, reply, { images, signal, history }) => string",
+    "suggestions": "array of starter prompts",
+    "messages": "(read-only) the jade-message elements",
+    "history": "[{ role, content }] in handler mode",
+    "surfaces": "Map of surface name → jade-surface the agent made",
+    "busy": "true while running"
+   },
+   "methods": {
+    "connect(kit, { approve, ui, brain, …kit.agent options })": "make a kit agent with approvals and the UI tools",
+    "send(text, { images })": "send and run; resolves with the reply text",
+    "stop()": "stop the run",
+    "regenerate()": "answer the last message again",
+    "edit(text)": "change the last user message and run again",
+    "clear()": "remove all messages",
+    "addMessage({ role, content, name, images })": "add a message element",
+    "approval(tools)": "an agent plugin that asks before the tools named",
+    "scrollToEnd(smooth)": "jump to the latest message"
+   },
+   "events": {
+    "jade-send": "no agent or handler: { text, images, reply, signal }; write to reply and call reply.finish()",
+    "jade-run": "a run starts { text, message }",
+    "jade-done": "a run ends { text, message, error, stopped }",
+    "jade-tool": "a tool call { name, args }",
+    "jade-action": "a surface action { surface, name, data, values }",
+    "jade-approval": "an approval was answered { name, args, allowed }"
+   },
+   "slots": {
+    "header": "above the conversation",
+    "empty": "replaces the empty state"
+   },
+   "parts": [
+    "log",
+    "list",
+    "empty",
+    "suggestions",
+    "jump",
+    "composer",
+    "message",
+    "bubble",
+    "text",
+    "thinking",
+    "actions",
+    "name",
+    "error",
+    "composer-form",
+    "composer-input",
+    "composer-send"
+   ]
+  },
+  "jade-message": {
+   "description": "One chat turn. Assistant turns stream blocks: thinking, markdown text, tool calls and surfaces.",
+   "attributes": {
+    "role": "user | assistant | system",
+    "name": "label shown above it",
+    "actions": "space-separated: copy edit regenerate",
+    "streaming": "(read-only) while streaming",
+    "kind": "action for surface-action messages"
+   },
+   "methods": {
+    "begin()": "start streaming",
+    "append(delta)": "add text",
+    "setText(text)": "replace text",
+    "thinking(delta)": "add reasoning",
+    "tool(name, args)": "a tool-call card → handle { done, fail, ask, answer }",
+    "surface(spec, name)": "a surface → Promise<jade-surface>",
+    "meta(text)": "small label (model)",
+    "finish({ stopped })": "end streaming",
+    "fail(error)": "show an error with Retry",
+    "setImages(urls)": "images above a user message"
+   },
+   "properties": {
+    "text": "(read-only) the text"
+   },
+   "events": {
+    "jade-regenerate": "",
+    "jade-edit": "{ text }",
+    "jade-retry": "",
+    "jade-finish": "{ text, stopped, error }"
+   },
+   "parts": [
+    "bubble",
+    "text",
+    "thinking",
+    "actions",
+    "name",
+    "error",
+    "note"
+   ]
+  },
+  "jade-composer": {
+   "description": "The message input: grows with text, Enter sends, Shift+Enter new line, Esc stops; image attach, paste and drop.",
+   "attributes": {
+    "placeholder": "",
+    "busy": "shows Stop instead of Send",
+    "disabled": "",
+    "attach": "allow images",
+    "multiline": "Enter makes a new line",
+    "hint": "small text under it"
+   },
+   "properties": {
+    "value": "the text",
+    "images": "attached images [{ name, type, dataUrl, base64 }]"
+   },
+   "methods": {
+    "submit()": "",
+    "stop()": "",
+    "focus()": "",
+    "addFiles(files)": ""
+   },
+   "events": {
+    "jade-submit": "{ text, images } (cancelable)",
+    "jade-stop": "",
+    "jade-attach": "{ files } that are not images"
+   },
+   "parts": [
+    "form",
+    "input",
+    "send",
+    "attachments",
+    "hint"
+   ]
+  },
+  "jade-tool-call": {
+   "description": "A tool call card: name, arguments, status, result; ask() turns it into an approval card.",
+   "attributes": {
+    "name": "",
+    "status": "running | done | error | waiting | denied"
+   },
+   "properties": {
+    "args": "",
+    "result": ""
+   },
+   "methods": {
+    "start(name, args)": "",
+    "done(result)": "",
+    "fail(error)": "",
+    "ask({ message })": "Promise<boolean>",
+    "answer(ok)": ""
+   },
+   "events": {
+    "jade-approval": "{ name, args, allowed }",
+    "jade-approval-always": "{ name }"
+   },
+   "parts": [
+    "card",
+    "summary",
+    "name",
+    "body",
+    "args",
+    "result",
+    "approval"
+   ]
+  },
+  "jade-surface": {
+   "description": "Renders UI from a declarative spec (see SPEC and COMPONENTS). Agents build and change it; buttons send actions back.",
+   "attributes": {
+    "name": "the name agents address it by"
+   },
+   "properties": {
+    "data": "(copy) the data model",
+    "spec": "(copy) { root, components, data }",
+    "result": "the last { ok, warnings, count }",
+    "onaction": "(detail) => void"
+   },
+   "methods": {
+    "render(spec)": "replace everything → Promise<{ ok, warnings, count }>",
+    "update({ components, remove, data, root })": "change part of it",
+    "setData(path, value)": "",
+    "getData(path)": "",
+    "clear()": ""
+   },
+   "events": {
+    "jade-action": "{ surface, name, data, values }",
+    "jade-change": "{ surface, path, value }",
+    "jade-invalid": "{ surface, fields }",
+    "jade-render": "{ surface, warnings }"
+   },
+   "parts": [
+    "root",
+    "c",
+    "c <component name in lower case> (e.g. ::part(card))"
+   ]
+  },
+  "jade-markdown": {
+   "description": "Safe markdown (with copyable, highlighted code blocks).",
+   "attributes": {
+    "text": "markdown (or the element's text content)"
+   },
+   "properties": {
+    "text": ""
+   },
+   "methods": {
+    "append(delta)": "streaming"
+   },
+   "parts": [
+    "content"
+   ]
+  },
+  "jade-code": {
+   "description": "A code block with copy and highlighting.",
+   "attributes": {
+    "lang": "",
+    "code": "or the text content"
+   },
+   "properties": {
+    "code": "",
+    "lang": ""
+   },
+   "parts": [
+    "code",
+    "bar"
+   ]
+  },
+  "jade-theme-toggle": {
+   "description": "Cycles auto/light/dark and remembers it; with `presets`, also a preset picker.",
+   "attributes": {
+    "presets": "show the preset picker"
+   }
+  }
+ },
+ "components": {
+  "Column": {
+   "group": "layout",
+   "children": true,
+   "description": "Stacks children vertically.",
+   "props": {
+    "gap": {
+     "type": "number",
+     "description": "space between children, in theme spacing steps (0-8, default 1.5)"
+    },
+    "align": {
+     "type": "string",
+     "enum": [
+      "stretch",
+      "start",
+      "center",
+      "end"
+     ],
+     "description": "horizontal alignment"
+    },
+    "padding": {
+     "type": "number",
+     "description": "inner space in spacing steps"
+    }
+   }
+  },
+  "Row": {
+   "group": "layout",
+   "children": true,
+   "description": "Places children side by side; wraps on small screens unless wrap is false.",
+   "props": {
+    "gap": {
+     "type": "number",
+     "description": "space between children, in theme spacing steps (0-8, default 1.5)"
+    },
+    "align": {
+     "type": "string",
+     "enum": [
+      "center",
+      "start",
+      "end",
+      "stretch",
+      "baseline"
+     ],
+     "description": "vertical alignment"
+    },
+    "justify": {
+     "type": "string",
+     "enum": [
+      "start",
+      "center",
+      "end",
+      "between",
+      "around"
+     ],
+     "description": "horizontal distribution"
+    },
+    "wrap": {
+     "type": "boolean",
+     "description": "wrap to new lines (default true)"
+    }
+   }
+  },
+  "Grid": {
+   "group": "layout",
+   "children": true,
+   "description": "A responsive grid of equal columns (fewer on narrow screens).",
+   "props": {
+    "columns": {
+     "type": "number",
+     "description": "columns on wide screens (default: as many as fit)"
+    },
+    "minWidth": {
+     "type": "number",
+     "description": "narrowest a column may get, in px (default 180)"
+    },
+    "gap": {
+     "type": "number",
+     "description": "space between children, in theme spacing steps (0-8, default 1.5)"
+    }
+   }
+  },
+  "Card": {
+   "group": "layout",
+   "children": true,
+   "description": "A bordered panel, optionally with a title.",
+   "props": {
+    "title": {
+     "type": "string",
+     "description": "heading"
+    },
+    "subtitle": {
+     "type": "string",
+     "description": "smaller text under the title"
+    },
+    "tone": {
+     "type": "string",
+     "enum": [
+      "neutral",
+      "accent",
+      "ok",
+      "warn",
+      "danger"
+     ],
+     "description": "colour of the status"
+    },
+    "padding": {
+     "type": "number",
+     "description": "inner space in spacing steps (default 2)"
+    }
+   }
+  },
+  "Tabs": {
+   "group": "layout",
+   "children": false,
+   "description": "Tabs; each tab shows its own children.",
+   "props": {
+    "tabs": {
+     "type": "array",
+     "description": "[{ \"label\": \"Details\", \"children\": [\"id1\", \"id2\"] }]",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "keep the selected tab index in the data model"
+    }
+   }
+  },
+  "Divider": {
+   "group": "layout",
+   "description": "A horizontal rule.",
+   "props": {}
+  },
+  "Spacer": {
+   "group": "layout",
+   "description": "Empty space; in a Row it pushes the next items to the end.",
+   "props": {
+    "size": {
+     "type": "number",
+     "description": "spacing steps (default: fill the row)"
+    }
+   }
+  },
+  "Heading": {
+   "group": "content",
+   "description": "A heading.",
+   "props": {
+    "text": {
+     "type": "string",
+     "description": "the heading",
+     "required": true
+    },
+    "level": {
+     "type": "number",
+     "description": "1 (largest) to 4, default 2"
+    }
+   }
+  },
+  "Text": {
+   "group": "content",
+   "description": "Text with markdown (bold, lists, links, code).",
+   "props": {
+    "text": {
+     "type": "string",
+     "description": "markdown",
+     "required": true
+    },
+    "size": {
+     "type": "string",
+     "enum": [
+      "sm",
+      "md",
+      "lg"
+     ],
+     "description": "default md"
+    },
+    "muted": {
+     "type": "boolean",
+     "description": "secondary colour"
+    },
+    "align": {
+     "type": "string",
+     "enum": [
+      "start",
+      "center",
+      "end"
+     ],
+     "description": "alignment"
+    }
+   }
+  },
+  "Badge": {
+   "group": "content",
+   "description": "A small status label.",
+   "props": {
+    "text": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "tone": {
+     "type": "string",
+     "enum": [
+      "neutral",
+      "accent",
+      "ok",
+      "warn",
+      "danger"
+     ],
+     "description": "colour of the status"
+    }
+   }
+  },
+  "Image": {
+   "group": "content",
+   "description": "An image (https or data:image URLs only).",
+   "props": {
+    "src": {
+     "type": "string",
+     "description": "URL",
+     "required": true
+    },
+    "alt": {
+     "type": "string",
+     "description": "description for screen readers",
+     "required": true
+    },
+    "width": {
+     "type": "number",
+     "description": "px"
+    },
+    "height": {
+     "type": "number",
+     "description": "px"
+    },
+    "fit": {
+     "type": "string",
+     "enum": [
+      "cover",
+      "contain"
+     ],
+     "description": "how it fills width x height"
+    },
+    "rounded": {
+     "type": "boolean",
+     "description": "round the corners"
+    }
+   }
+  },
+  "Code": {
+   "group": "content",
+   "description": "A code block with copy and highlighting.",
+   "props": {
+    "code": {
+     "type": "string",
+     "description": "source",
+     "required": true
+    },
+    "lang": {
+     "type": "string",
+     "description": "language, e.g. js, py, sh, sql, json"
+    }
+   }
+  },
+  "Alert": {
+   "group": "content",
+   "description": "A highlighted message.",
+   "props": {
+    "title": {
+     "type": "string",
+     "description": "bold first line"
+    },
+    "text": {
+     "type": "string",
+     "description": "markdown"
+    },
+    "tone": {
+     "type": "string",
+     "enum": [
+      "info",
+      "ok",
+      "warn",
+      "danger"
+     ],
+     "description": "default info"
+    }
+   }
+  },
+  "Link": {
+   "group": "content",
+   "description": "A link that opens in a new tab (http, https or mailto).",
+   "props": {
+    "text": {
+     "type": "string",
+     "description": "link text",
+     "required": true
+    },
+    "href": {
+     "type": "string",
+     "description": "URL",
+     "required": true
+    }
+   }
+  },
+  "Button": {
+   "group": "inputs",
+   "description": "A button that sends an action back to the agent (and your app).",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "text",
+     "required": true
+    },
+    "action": {
+     "type": "action",
+     "description": "\"name\" or { \"name\", \"data\": {…}, \"validate\": true }. validate (default true) checks required fields first",
+     "required": true
+    },
+    "variant": {
+     "type": "string",
+     "enum": [
+      "primary",
+      "secondary",
+      "ghost",
+      "danger"
+     ],
+     "description": "default secondary"
+    },
+    "disabled": {
+     "type": "boolean",
+     "description": "greyed out"
+    },
+    "full": {
+     "type": "boolean",
+     "description": "full width"
+    }
+   }
+  },
+  "TextField": {
+   "group": "inputs",
+   "description": "A one-line input bound to the data model.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "where the value lives, e.g. \"/form/email\"",
+     "required": true
+    },
+    "type": {
+     "type": "string",
+     "enum": [
+      "text",
+      "email",
+      "number",
+      "url",
+      "tel",
+      "password",
+      "date",
+      "time",
+      "datetime-local",
+      "search"
+     ],
+     "description": "default text"
+    },
+    "placeholder": {
+     "type": "string",
+     "description": "hint inside the field"
+    },
+    "required": {
+     "type": "boolean",
+     "description": "must be filled before an action"
+    },
+    "help": {
+     "type": "string",
+     "description": "small text under the field"
+    },
+    "min": {
+     "type": "number",
+     "description": "number/date minimum"
+    },
+    "max": {
+     "type": "number",
+     "description": "number/date maximum"
+    }
+   }
+  },
+  "TextArea": {
+   "group": "inputs",
+   "description": "A multi-line input bound to the data model.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "data path",
+     "required": true
+    },
+    "rows": {
+     "type": "number",
+     "description": "visible lines (default 4)"
+    },
+    "placeholder": {
+     "type": "string",
+     "description": "hint"
+    },
+    "required": {
+     "type": "boolean",
+     "description": "must be filled"
+    },
+    "help": {
+     "type": "string",
+     "description": "small text under it"
+    }
+   }
+  },
+  "Select": {
+   "group": "inputs",
+   "description": "A dropdown bound to the data model.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "data path",
+     "required": true
+    },
+    "options": {
+     "type": "array",
+     "description": "choices: strings, or { value, label }",
+     "required": true
+    },
+    "placeholder": {
+     "type": "string",
+     "description": "text when nothing is chosen"
+    },
+    "required": {
+     "type": "boolean",
+     "description": "must be chosen"
+    }
+   }
+  },
+  "RadioGroup": {
+   "group": "inputs",
+   "description": "One choice out of a few, bound to the data model.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "data path",
+     "required": true
+    },
+    "options": {
+     "type": "array",
+     "description": "choices: strings, or { value, label }",
+     "required": true
+    },
+    "required": {
+     "type": "boolean",
+     "description": "must be chosen"
+    }
+   }
+  },
+  "Checkbox": {
+   "group": "inputs",
+   "description": "A checkbox bound to a boolean.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "data path",
+     "required": true
+    }
+   }
+  },
+  "Switch": {
+   "group": "inputs",
+   "description": "An on/off switch bound to a boolean.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "data path",
+     "required": true
+    }
+   }
+  },
+  "Slider": {
+   "group": "inputs",
+   "description": "A range slider bound to a number.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "label",
+     "required": true
+    },
+    "bind": {
+     "type": "path",
+     "description": "data path",
+     "required": true
+    },
+    "min": {
+     "type": "number",
+     "description": "default 0"
+    },
+    "max": {
+     "type": "number",
+     "description": "default 100"
+    },
+    "step": {
+     "type": "number",
+     "description": "default 1"
+    }
+   }
+  },
+  "Stat": {
+   "group": "data",
+   "description": "A key number with a label and optional change.",
+   "props": {
+    "label": {
+     "type": "string",
+     "description": "what it measures",
+     "required": true
+    },
+    "value": {
+     "type": "string",
+     "description": "the number or text",
+     "required": true
+    },
+    "delta": {
+     "type": "string",
+     "description": "change, e.g. \"+12%\""
+    },
+    "tone": {
+     "type": "string",
+     "enum": [
+      "neutral",
+      "accent",
+      "ok",
+      "warn",
+      "danger"
+     ],
+     "description": "colour of the status"
+    },
+    "help": {
+     "type": "string",
+     "description": "small text below"
+    }
+   }
+  },
+  "Progress": {
+   "group": "data",
+   "description": "A progress bar (no value: indeterminate).",
+   "props": {
+    "value": {
+     "type": "number",
+     "description": "0 to max"
+    },
+    "max": {
+     "type": "number",
+     "description": "default 100"
+    },
+    "label": {
+     "type": "string",
+     "description": "label"
+    }
+   }
+  },
+  "Table": {
+   "group": "data",
+   "description": "A table of rows (objects).",
+   "props": {
+    "columns": {
+     "type": "array",
+     "description": "[{ \"key\": \"name\", \"label\": \"Name\", \"align\": \"start|end|center\" }] (default: the first row's keys)"
+    },
+    "rows": {
+     "type": "array",
+     "description": "array of objects, or a binding {\"$data\": \"/rows\"}",
+     "required": true
+    },
+    "empty": {
+     "type": "string",
+     "description": "text when there are no rows"
+    }
+   }
+  },
+  "List": {
+   "group": "data",
+   "description": "A list. Items are markdown strings, or objects drawn with a template component that reads \"$item/…\".",
+   "props": {
+    "items": {
+     "type": "array",
+     "description": "array, or a binding {\"$data\": \"/todos\"}",
+     "required": true
+    },
+    "template": {
+     "type": "id",
+     "description": "a component id drawn once per item (inside it, {\"$data\": \"$item/title\"} and \"{{$item/title}}\")"
+    },
+    "ordered": {
+     "type": "boolean",
+     "description": "numbered"
+    },
+    "empty": {
+     "type": "string",
+     "description": "text when the list is empty"
+    }
+   }
+  },
+  "KeyValue": {
+   "group": "data",
+   "description": "Label and value pairs.",
+   "props": {
+    "items": {
+     "type": "array",
+     "description": "[{ \"key\": \"Status\", \"value\": \"Shipped\" }] or an object",
+     "required": true
+    }
+   }
+  }
+ },
+ "common": {
+  "visible": {
+   "type": "boolean",
+   "description": "show or hide; usually a binding like {\"$data\": \"/showDetails\"}"
+  }
+ },
+ "spec": {
+  "description": "A surface spec is a flat list of components that point at their children by id, plus a data model.",
+  "shape": "{ \"root\": \"<id>\", \"components\": [{ \"id\": \"<unique>\", \"component\": \"<name>\", \"props\": { … }, \"children\": [\"<id>\", …] }], \"data\": { … } }",
+  "values": "Any prop can be a literal, {\"$data\": \"/path\"} (live from the data model), or a string with {{/path}} in it. Inside a List template, paths start with $item (e.g. \"$item/title\") and {{$index}} is the position.",
+  "inputs": "Inputs write to the data model at their \"bind\" path. Read it back with ui_read, or receive it with an action.",
+  "actions": "A Button's action (\"name\" or { \"name\", \"data\" }) is sent back to the agent as a message: [ui action] … with the action's data and every value in the data model. Required fields are checked first.",
+  "updates": "ui_update changes part of a surface: components with an existing id replace it, new ids are added, \"remove\" deletes ids, \"data\" merges into the model (or [{ path, value }]). Changing only data keeps what the person typed and where they are.",
+  "example": {
+   "root": "root",
+   "components": [
+    {
+     "id": "root",
+     "component": "Card",
+     "props": {
+      "title": "Book a table"
+     },
+     "children": [
+      "when",
+      "size",
+      "go"
+     ]
+    },
+    {
+     "id": "when",
+     "component": "TextField",
+     "props": {
+      "label": "Date",
+      "type": "date",
+      "bind": "/booking/date",
+      "required": true
+     }
+    },
+    {
+     "id": "size",
+     "component": "Slider",
+     "props": {
+      "label": "Guests",
+      "bind": "/booking/guests",
+      "min": 1,
+      "max": 12
+     }
+    },
+    {
+     "id": "go",
+     "component": "Button",
+     "props": {
+      "label": "Book for {{/booking/guests}}",
+      "variant": "primary",
+      "action": {
+       "name": "book",
+       "data": {
+        "$data": "/booking"
+       }
+      }
+     }
+    }
+   ],
+   "data": {
+    "booking": {
+     "date": "",
+     "guests": 2
+    }
+   }
+  }
+ },
+ "theme": {
+  "tokens": [
+   "--jade-bg",
+   "--jade-surface",
+   "--jade-surface-2",
+   "--jade-fg",
+   "--jade-muted",
+   "--jade-border",
+   "--jade-accent",
+   "--jade-accent-fg",
+   "--jade-user",
+   "--jade-user-fg",
+   "--jade-code",
+   "--jade-ok",
+   "--jade-warn",
+   "--jade-danger",
+   "--jade-syn-k",
+   "--jade-syn-s",
+   "--jade-syn-n",
+   "--jade-syn-c",
+   "--jade-radius",
+   "--jade-space",
+   "--jade-font",
+   "--jade-mono",
+   "--jade-font-size",
+   "--jade-shadow",
+   "--jade-focus"
+  ],
+  "presets": [
+   "jade",
+   "midnight",
+   "paper",
+   "contrast"
+  ]
+ }
+}

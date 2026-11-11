@@ -1,0 +1,26 @@
+name: test
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+jobs:
+  test:
+    runs-on: ubuntu-24.04   # Playwright 1.56 has browsers for 24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/checkout@v4   # Jade Agent Kit, for the integration test
+        with: { repository: lucky-edgelord/Jade-agent-kit, path: jade-agent-kit }
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npx playwright install --with-deps chromium
+      - name: build and check dist/ is up to date
+        run: |
+          node scripts/build.mjs
+          git diff --exit-code -- dist || (echo "dist/ is out of date: run npm run build and commit it" && exit 1)
+      - run: node tests/run.mjs
+        env: { JAK_DIR: jade-agent-kit }
+      - run: node tests/run.mjs
+        env: { JAK_DIR: jade-agent-kit, JUI_SRC: '1' }

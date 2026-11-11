@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jade Agent UI/UX demo</title>
+<style>
+  html, body { margin: 0; height: 100%; background: var(--jade-bg); color: var(--jade-fg); font-family: var(--jade-font, system-ui); }
+  .app { display: grid; grid-template-columns: minmax(0, 1fr) 300px; grid-template-rows: auto minmax(0, 1fr); height: 100dvh; }
+  header { grid-column: 1 / -1; display: flex; align-items: center; gap: 12px; padding: 10px 16px; border-bottom: 1px solid var(--jade-border); flex-wrap: wrap; }
+  header strong { margin-right: auto; }
+  header input { font: inherit; font-size: .9em; padding: 6px 10px; border-radius: 8px; border: 1px solid var(--jade-border); background: var(--jade-surface); color: inherit; width: 200px; max-width: 100%; }
+  header button { font: inherit; font-size: .9em; padding: 6px 12px; border-radius: 8px; border: 0; background: var(--jade-accent); color: var(--jade-accent-fg); cursor: pointer; }
+  aside { border-left: 1px solid var(--jade-border); padding: 16px; overflow: auto; }
+  aside h2 { font-size: .8em; text-transform: uppercase; letter-spacing: .06em; color: var(--jade-muted); margin: 0 0 10px; }
+  @media (max-width: 760px) { .app { grid-template-columns: 1fr; } aside { display: none; } header input { width: 140px; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <strong>Jade Agent UI/UX</strong>
+    <input id="key" type="password" placeholder="Ollama Cloud key (optional)" aria-label="Ollama Cloud API key">
+    <button id="connect" type="button">Connect</button>
+    <jade-theme-toggle presets></jade-theme-toggle>
+  </header>
+  <jade-chat id="chat" attach greeting="Try the demo agent"
+    hint="Demo agent: no model needed. Paste an Ollama Cloud key to talk to a real Jade Agent Kit agent."
+    suggestions='["Show me what you can do", "Make me a sign-up form", "Run a shell command", "Write some Python"]'></jade-chat>
+  <aside>
+    <h2>Page surface "sidebar"</h2>
+    <jade-surface name="sidebar"></jade-surface>
+  </aside>
+</div>
+<script type="module">
+  import { uiTools } from '../dist/jade-ui.js';
+  const chat = document.getElementById('chat');
+  await customElements.whenDefined('jade-chat');
+
+  // A demo agent with the same events as a Jade Agent Kit agent, playing a script. It uses the real UI tools.
+  const ui = await uiTools({ chat });
+  const wait = ms => new Promise(r => setTimeout(r, ms));
+  class DemoAgent {
+    constructor() { this.messages = []; this.onEvent = null; this.plugins = [chat.approval(['bash'])]; }
+    abort() { this.stop = true; }
+    reset() { this.messages = []; }
+    async say(text) { for (const w of text.match(/\S+\s*|\s+/g)) { if (this.stop) return; this.onEvent?.({ type: 'text', delta: w }); await wait(18); } }
+    async think(text) { for (const w of text.match(/\S+\s*/g)) { this.onEvent?.({ type: 'thinking', delta: w }); await wait(25); } }
+    async tool(name, args, run) {
+      this.onEvent?.({ type: 'tool_call', name, args }); let result = null;
+      for (const p of this.plugins) { const r = await p.beforeTool?.(this, { name, args }); if (r != null) { result = r; break; } }
+      if (result == null) { await wait(300); result = await run(); }
+      this.onEvent?.({ type: 'tool_result', name, result }); return result;
+    }
+    async prompt(text) {
+      this.stop = false; this.messages.push({ role: 'user', content: text }); const t = text.toLowerCase();
+      if (t.startsWith('[ui action]')) {
+        const d = JSON.parse(text.slice(text.indexOf('\n') + 1));
+        await this.tool('ui_update', { surface: 'signup', components: [{ id: 'root', component: 'Alert', props: { tone: 'ok', title: 'You are in', text: 'Welcome, **{{/name}}**. A confirmation went to {{/email}}.' } }] }, () => ui.defs.ui_update.run({ surface: 'signup', components: [{ id: 'root', component: 'Alert', props: { tone: 'ok', title: 'You are in', text: 'Welcome, **{{/name}}**. A confirmation went to {{/email}}.' } }] }));
+        await this.say(`Done: ${d.values.name} is signed up for the **${d.values.plan}** plan.`);
+      } else if (t.includes('form')) {
+        await this.think('A form lets them answer in one go. Name, email, plan, then a button.');
+        const spec = { surface: 'signup', components: [
+          { id: 'root', component: 'Card', props: { title: 'Create your account', subtitle: 'Takes ten seconds' }, children: ['row', 'plan', 'terms', 'go'] },
+          { id: 'row', component: 'Row', children: ['name', 'email'] },
+          { id: 'name', component: 'TextField', props: { label: 'Name', bind: '/name', required: true } },
+          { id: 'email', component: 'TextField', props: { label: 'Email', bind: '/email', type: 'email', required: true } },
+          { id: 'plan', component: 'RadioGroup', props: { label: 'Plan', bind: '/plan', options: ['Free', 'Pro', 'Team'] } },
+          { id: 'terms', component: 'Switch', props: { label: 'Email me product news', bind: '/news' } },
+          { id: 'go', component: 'Button', props: { label: 'Sign up', variant: 'primary', action: 'signup' } },
+        ], data: { name: '', email: '', plan: 'Pro', news: true } };
+        await this.tool('ui_render', spec, () => ui.defs.ui_render.run(spec));
+        await this.say('Fill this in and press **Sign up**: your answers come straight back to me.');
+      } else if (t.includes('shell')) {
+        await this.say('I will list the workspace. Running commands needs your OK:\n\n');
+        const r = await this.tool('bash', { command: 'ls -la /workspace' }, () => 'total 12\ndrwxr-xr-x  notes/\n-rw-r--r--  todo.md\n-rw-r--r--  data.csv');
+        await this.say(/denied/.test(r) ? 'Understood, I did not run it.' : 'Three entries: a `notes/` folder, `todo.md` and `data.csv`.');
+      } else if (t.includes('python')) {
+        await this.say('Here is a small one:\n\n```python\ndef fib(n):\n    a, b = 0, 1\n    for _ in range(n):\n        a, b = b, a + b\n    return a\n\nprint([fib(i) for i in range(10)])\n```\n\nIt prints the first ten Fibonacci numbers.');
+      } else {
+        await this.think('Show markdown, a tool, and some UI on the page.');
+        await this.say('I can **stream** answers with markdown:\n\n- lists, `code` and [links](https://github.com/lucky-edgelord/Jade-agent-ui-ux)\n- tables:\n\n| Feature | Loads |\n|---|---|\n| chat | when it appears |\n| surfaces | per component group |\n\n');
+        await this.tool('ui_render', { surface: 'sidebar' }, () => ui.defs.ui_render.run({ surface: 'sidebar', components: [
+          { id: 'root', component: 'Column', children: ['s', 'p', 'l'] },
+          { id: 's', component: 'Stat', props: { label: 'Messages today', value: 128, delta: '+12%' } },
+          { id: 'p', component: 'Progress', props: { label: 'Weekly goal', value: 68 } },
+          { id: 'l', component: 'List', props: { items: ['Ship the **chat**', 'Write the docs', 'Celebrate'] } },
+        ] }));
+        await this.say('…and I just drew a dashboard on the page surface on the right.');
+      }
+      if (this.stop) return '(stopped)';
+      this.onEvent?.({ type: 'done' }); return 'ok';
+    }
+  }
+  chat.agent = new DemoAgent();
+
+  // A real Jade Agent Kit agent on Ollama Cloud
+  document.getElementById('connect').onclick = async () => {
+    const key = document.getElementById('key').value.trim(); if (!key) return document.getElementById('key').focus();
+    const { createKit } = await import('https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.0.0/dist/jade-agent-kit.js');
+    const kit = await createKit({ ollamaKey: key, persist: 'jade-ui-demo' });
+    chat.clear(); await chat.connect(kit, { brain: true, approve: ['bash', 'write', 'edit'] });
+    chat.setAttribute('greeting', 'Connected to Ollama Cloud'); chat.removeAttribute('hint');
+  };
+</script>
+<script type="module" src="../dist/jade-ui.js"></script>
+</body>
+</html>
