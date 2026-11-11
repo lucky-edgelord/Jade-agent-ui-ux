@@ -1,13 +1,13 @@
-# Jade Agent UI/UX 1.1.0
+# Jade Agent UI/UX 1.2.0
 
-> Themeable, lazy-loaded web components for AI agents, from a CDN. Made for Jade Agent Kit. Load https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/jade-ui.js once;
-> each <jade-*> element downloads its module the first time it appears. Machine-readable: https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/catalog.json
+> Themeable, lazy-loaded web components for AI agents, from a CDN. Made for Jade Agent Kit. Load https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/jade-ui.js once;
+> each <jade-*> element downloads its module the first time it appears. Machine-readable: https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/catalog.json
 
 ## Use it
 ```html
 <script type="module">
-  import { setTheme } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/jade-ui.js';
-  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.0.0/dist/jade-agent-kit.js';
+  import { setTheme } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/jade-ui.js';
+  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.1.0/dist/jade-agent-kit.js';
   const kit = await createKit({ ollamaKey: '…' });
   await document.querySelector('jade-chat').connect(kit, { approve: ['bash', 'write', 'edit'] });
 </script>
@@ -27,6 +27,20 @@ Properties: agent (a Jade Agent Kit agent (or { prompt, abort, messages, onEvent
 Methods: connect(kit, { approve, ui, brain, …kit.agent options }) (make a kit agent with approvals and the UI tools); send(text, { images }) (send and run; resolves with the reply text); stop() (stop the run); regenerate() (answer the last message again); edit(text) (change the last user message and run again); clear() (remove all messages); addMessage({ role, content, name, images }) (add a message element); approval(tools) (an agent plugin that asks before the tools named); scrollToEnd(smooth) (jump to the latest message)
 Events: jade-send no agent or handler: { text, images, reply, signal }; write to reply and call reply.finish(); jade-run a run starts { text, message }; jade-done a run ends { text, message, error, stopped }; jade-tool a tool call { name, args }; jade-action a surface action { surface, name, data, values }; jade-approval an approval was answered { name, args, allowed }
 CSS parts: log, list, empty, suggestions, jump, composer, message, bubble, text, thinking, actions, name, error, composer-form, composer-input, composer-send
+
+### <jade-chat-widget>
+A floating chat button in a corner that opens a chat panel (customer service, help desks, sales, an assistant on any page). The <jade-chat> inside loads on the first open; on small screens the panel fills the screen. Esc closes; a reply that arrives while closed shows a dot.
+Attributes: title (panel heading (default "Chat with us")); subtitle (line under it); greeting (empty-state heading); suggestions (JSON array of starter prompts); placeholder (composer placeholder); label (the button's accessible name); position (bottom-right | bottom-left); open (open (reflects))
+Properties: handler (async (text, reply, ctx) => … (as <jade-chat>))
+Methods: open(); close(); toggle(); chat() (→ Promise of the inner <jade-chat>); connect(kit, opts) (a Jade Agent Kit agent (as <jade-chat>.connect)); send(text) (open and send as the person)
+Events: jade-open; jade-close
+CSS parts: button, panel, header, close, chat
+
+### <jade-chart>
+A chart for dashboards: line, area, bar (grouped, stacked or horizontal), donut, pie or sparkline, drawn as SVG with the theme. Hover or arrow keys show values; screen readers get a table of the numbers. Redraws on resize.
+Attributes: type (line | area | bar | donut | pie | sparkline); data (JSON rows, e.g. [{"month":"Jan","signups":30}]); x (the category key (default: the first text key)); series (keys to plot: "a,b" or JSON [{key,label,color}] (default: every number key)); format (number | compact | percent | currency | currency:EUR); title (heading); height (px (default 240)); stacked (stack bars or areas); horizontal (horizontal bars); legend (true | false); center-label (donut: text under the total); empty (text with no data)
+Properties: data (the rows (instead of the attribute)); options ({ stacked, horizontal, height, format, min, max, colors, zero, dots, center, centerLabel })
+CSS parts: title, chart
 
 ### <jade-message>
 One chat turn. Assistant turns stream blocks: thinking, markdown text, tool calls and surfaces.
@@ -74,12 +88,12 @@ Properties: code; lang
 CSS parts: code, bar
 
 ### <jade-auth>
-Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server; signed in, shows who and Sign out. Server field errors appear on their fields.
+Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server, plus a "Continue with …" button for each OAuth2 provider the server has on (Google, Facebook, GitHub, …; an agent turns them on with auth_provider_set). Signed in, shows who and Sign out. Server field errors appear on their fields.
 Attributes: base (the server URL (else setBase(), <meta name="jade-base">, or this page)); mode (signin | signup | reset)
 Properties: client ((read-only) the Jade Agent Base client)
 Methods: show(mode) (switch between signin, signup and reset)
-Events: jade-auth { user, mode } after signing in or up; jade-signout
-CSS parts: card, form, submit
+Events: jade-auth { user, mode } after signing in or up (mode: signin, signup or the provider name); jade-signout
+CSS parts: card, form, submit, providers, provider
 
 ### <jade-pricing>
 The server's plans as cards (price, limits), the user's plan marked, and Subscribe buttons that open Stripe Checkout.
@@ -132,9 +146,10 @@ Every component also takes "visible" (often a binding). Props marked * are requi
 - Checkbox: A checkbox bound to a boolean. Props: label*: string (label); bind*: path (data path).
 - Switch: An on/off switch bound to a boolean. Props: label*: string (label); bind*: path (data path).
 - Slider: A range slider bound to a number. Props: label*: string (label); bind*: path (data path); min: number (default 0); max: number (default 100); step: number (default 1).
-- Stat: A key number with a label and optional change. Props: label*: string (what it measures); value*: string (the number or text); delta: string (change, e.g. "+12%"); tone: neutral|accent|ok|warn|danger (colour of the status); help: string (small text below).
+- Stat: A key number with a label and optional change. Props: label*: string (what it measures); value*: string (the number or text); delta: string (change, e.g. "+12%"); tone: neutral|accent|ok|warn|danger (colour of the status); help: string (small text below); spark: array (recent values for a small trend line, e.g. [3,5,4,8]).
 - Progress: A progress bar (no value: indeterminate). Props: value: number (0 to max); max: number (default 100); label: string (label).
-- Table: A table of rows (objects). Props: columns: array ([{ "key": "name", "label": "Name", "align": "start|end|center" }] (default: the first row's keys)); rows*: array (array of objects, or a binding {"$data": "/rows"}); empty: string (text when there are no rows).
+- Table: A table of rows (objects). Props: columns: array ([{ "key": "name", "label": "Name", "align": "start|end|center", "format": "number|compact|percent|currency|currency:EUR|date|datetime|badge", "tones": {"paid": "ok"} }] (default: the first row's keys)); rows*: array (array of objects, or a binding {"$data": "/rows"}); empty: string (text when there are no rows); sortable: boolean (sort by clicking a header (default true)); search: boolean (a search box over the rows); pageSize: number (rows per page (default: all, up to 500)).
+- Chart: A chart for dashboards: line, area, bar (grouped, stacked or horizontal), donut, pie or sparkline. Hover or arrow keys show values; screen readers get a table. Props: type: line|area|bar|donut|pie|sparkline (default line); data*: array (rows like [{"month":"Jan","signups":30,"paid":4}] or a binding {"$data": "/sales"}; for a donut, rows of {label, value}); x: string (the key of the category/date (default: the first text key)); series: array (keys to plot, or [{ "key", "label", "color" }] (default: every number key)); title: string (heading); format: string (number | compact | percent | currency | currency:EUR); height: number (px (default 240)); stacked: boolean (stack bars or areas); horizontal: boolean (horizontal bars); min: number (axis minimum); max: number (axis maximum); legend: boolean (show the legend (default: with 2+ series)); centerLabel: string (donut: text under the total); empty: string (text with no data).
 - List: A list. Items are markdown strings, or objects drawn with a template component that reads "$item/…". Props: items*: array (array, or a binding {"$data": "/todos"}); template: id (a component id drawn once per item (inside it, {"$data": "$item/title"} and "{{$item/title}}")); ordered: boolean (numbered); empty: string (text when the list is empty).
 - KeyValue: Label and value pairs. Props: items*: array ([{ "key": "Status", "value": "Shipped" }] or an object).
 Example: {"root":"root","components":[{"id":"root","component":"Card","props":{"title":"Book a table"},"children":["when","size","go"]},{"id":"when","component":"TextField","props":{"label":"Date","type":"date","bind":"/booking/date","required":true}},{"id":"size","component":"Slider","props":{"label":"Guests","bind":"/booking/guests","min":1,"max":12}},{"id":"go","component":"Button","props":{"label":"Book for {{/booking/guests}}","variant":"primary","action":{"name":"book","data":{"$data":"/booking"}}}}],"data":{"booking":{"date":"","guests":2}}}

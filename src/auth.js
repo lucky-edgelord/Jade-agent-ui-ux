@@ -1,20 +1,27 @@
 // <jade-auth base="https://shop.example.com">: sign in, create an account, reset a password (Jade Agent Base / PocketBase
 // users). Signed in, it shows who and a Sign out button. Field errors from the server appear on their fields.
-// Events: jade-auth { user } after signing in or up · jade-signout
+// When the server has OAuth2 providers on (Google, Facebook, GitHub, …), a "Continue with …" button shows for each.
+// Events: jade-auth { user, mode } after signing in or up (mode: signin, signup or the provider) · jade-signout
 import { JadeElement, define, h } from './base.js';
-import { baseClient } from './base-client.js';
+import { baseClient, openPopup } from './base-client.js';
 import { FORM_CSS, busy } from './forms.js';
 
 class JadeAuth extends JadeElement {
-  static styles = FORM_CSS + `:host{max-width:400px}`;
+  static styles = FORM_CSS + `:host{max-width:400px}.oauth{display:grid;gap:8px}.or{display:flex;align-items:center;gap:10px;color:var(--jade-muted);font-size:.85em;margin:14px 0 4px}.or::before,.or::after{content:"";flex:1;border-top:1px solid var(--jade-border)}`;
   static observedAttributes = ['base', 'mode'];
   constructor() { super(); this._mode = 'signin'; this._onChange = () => this.render(); }
   /** the Jade Agent Base client this element uses */
   get client() { return baseClient(this.getAttribute('base') || undefined); }
   connectedCallback() { this._mode = this.getAttribute('mode') || this._mode; this._bind(); this.render(); }
+  async _loadMethods() {
+    const c = this.client; let m = null; try { m = await c.authMethods(); } catch {}
+    if (c !== this.client) return;
+    this._providers = m?.oauth2?.enabled ? (m.oauth2.providers || []) : []; this._password = m ? m.password?.enabled !== false : true;
+    if (!c.signedIn && (this._providers.length || !this._password)) this.render();
+  }
   disconnectedCallback() { this._c?.removeEventListener('change', this._onChange); }
   attributeChangedCallback(n, o, v) { if (n === 'mode' && v) this._mode = v; if (this.isConnected) { this._bind(); this.render(); } }
-  _bind() { const c = this.client; if (c !== this._c) { this._c?.removeEventListener('change', this._onChange); this._c = c; c.addEventListener('change', this._onChange); } }
+  _bind() { const c = this.client; if (c !== this._c) { this._c?.removeEventListener('change', this._onChange); this._c = c; c.addEventListener('change', this._onChange); this._providers = []; this._password = true; if (this.isConnected) this._loadMethods(); } }
   /** show signin | signup | reset */
   show(mode) { this._mode = mode; this.render(); }
   render() {
@@ -57,8 +64,22 @@ class JadeAuth extends JadeElement {
         if (!shown) { err.textContent = m === 'signin' && x.status === 400 ? 'That email and password do not match an account.' : x.message; err.hidden = false; }
       }
     });
+    const provs = m === 'reset' ? [] : this._providers || [];
+    const perr = h('div', { class: 'err', role: 'alert', hidden: true });
+    const social = provs.length ? h('div', { class: 'oauth', part: 'providers' }, ...provs.map(p => {
+      const label = p.displayName || p.name[0].toUpperCase() + p.name.slice(1);
+      const b = h('button', { class: 'btn wide', type: 'button', part: 'provider', 'data-provider': p.name }, `Continue with ${label}`);
+      b.addEventListener('click', async () => {
+        perr.hidden = true; const popup = openPopup();
+        try { await busy(b, async () => { const user = await c.signInWith(p.name, { popup }); this.emit('jade-auth', { user, mode: p.name }); }); }
+        catch (x) { if (!x.cancelled) { perr.textContent = x.message; perr.hidden = false; } }
+      });
+      return b;
+    }), perr) : null;
+    const password = this._password !== false;
     this.shadowRoot.replaceChildren(h('div', { class: 'card', part: 'card' },
-      m === 'reset' ? h('h2', { text: 'Reset your password' }) : h('div', { class: 'tabs', role: 'tablist' }, tab('signin', 'Sign in'), tab('signup', 'Create account')), form));
+      m === 'reset' ? h('h2', { text: 'Reset your password' }) : password ? h('div', { class: 'tabs', role: 'tablist' }, tab('signin', 'Sign in'), tab('signup', 'Create account')) : h('h2', { text: 'Sign in' }),
+      social, social && password ? h('p', { class: 'or', 'aria-hidden': 'true' }, h('span', { text: 'or' })) : null, password || m === 'reset' ? form : null));
   }
 }
 define('jade-auth', JadeAuth);

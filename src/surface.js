@@ -16,7 +16,7 @@ import { JadeElement, define, h, icon } from './base.js';
 import { COMPONENTS, COMMON } from './components.js';
 import { renderMarkdown, enhance, MD_CSS, safeHref, safeSrc, esc } from './markdown.js';
 
-const GROUPS = { layout: () => import('./surface/layout.js'), content: () => import('./surface/content.js'), inputs: () => import('./surface/inputs.js'), data: () => import('./surface/data.js') };
+const GROUPS = { layout: () => import('./surface/layout.js'), content: () => import('./surface/content.js'), inputs: () => import('./surface/inputs.js'), data: () => import('./surface/data.js'), charts: () => import('./surface/charts.js') };
 const cache = {}, loading = {};
 const loadGroup = g => (loading[g] ||= GROUPS[g]().then(m => (cache[g] = m.default), e => { delete loading[g]; throw e; }));
 const LIMIT = 1000, DEPTH = 32;
@@ -93,6 +93,12 @@ input[type=range]{accent-color:var(--jade-accent);width:100%}
 .prog{display:flex;flex-direction:column;gap:4px}.prog .lb{display:flex;justify-content:space-between;font-size:.85em}
 .bar{height:8px;border-radius:999px;background:var(--jade-surface-2);overflow:hidden}.bar i{display:block;height:100%;background:var(--jade-accent);border-radius:inherit;transition:width .25s}
 .bar[data-ind] i{width:35%!important;animation:ind 1.3s ease-in-out infinite}@keyframes ind{from{transform:translateX(-100%)}to{transform:translateX(290%)}}
+.tblw{display:flex;flex-direction:column;gap:8px;min-width:0}.tbl-q{font:inherit;padding:6px 10px;border:1px solid var(--jade-border);border-radius:8px;background:var(--jade-surface);color:var(--jade-fg);max-width:260px}
+.tbl-p{display:flex;align-items:center;gap:10px;justify-content:flex-end;font-size:.85em;color:var(--jade-muted)}
+.tbl th .sort{all:unset;cursor:pointer;display:inline-flex;gap:2px;font-weight:600}.tbl th .sort:focus-visible{outline:2px solid var(--jade-focus);outline-offset:2px}.tbl th .ar{font-size:.75em;color:var(--jade-muted)}
+.tbl .badge[data-tone=ok]{background:color-mix(in srgb,var(--jade-ok) 15%,transparent);color:var(--jade-ok)}.tbl .badge[data-tone=warn]{background:color-mix(in srgb,var(--jade-warn) 15%,transparent);color:var(--jade-warn)}.tbl .badge[data-tone=danger]{background:color-mix(in srgb,var(--jade-danger) 15%,transparent);color:var(--jade-danger)}
+.stat .vr{display:flex;align-items:flex-end;justify-content:space-between;gap:10px}.stat .sp{flex:none}
+.chart{min-width:0}.chart-t{margin:0 0 6px;font-size:.95em;font-weight:600}
 .tbl{overflow-x:auto;border:1px solid var(--jade-border);border-radius:calc(var(--jade-radius) * .6)}
 .tbl table{border-collapse:collapse;width:100%;font-size:.92em}
 .tbl th,.tbl td{padding:7px 10px;border-bottom:1px solid var(--jade-border);text-align:start;vertical-align:top}

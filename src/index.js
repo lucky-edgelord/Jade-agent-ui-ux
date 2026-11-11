@@ -4,11 +4,13 @@
 // Each element's module also works on its own (import '…/dist/chat.js'), and nothing else is fetched until used.
 import { setTheme, getTheme, PRESETS, TOKENS } from './theme.js';
 export { setTheme, getTheme, PRESETS, TOKENS };
-export const VERSION = '1.1.0';
+export const VERSION = '1.2.0';
 
 /** every element and the module that defines it */
 export const ELEMENTS = {
   'jade-chat': () => import('./chat.js'),
+  'jade-chat-widget': () => import('./chat-widget.js'),
+  'jade-chart': () => import('./chart.js'),
   'jade-message': () => import('./message.js'),
   'jade-composer': () => import('./composer.js'),
   'jade-tool-call': () => import('./tool-call.js'),

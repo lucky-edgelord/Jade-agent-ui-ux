@@ -3,6 +3,12 @@
 Web components for AI agents, loaded from a CDN with one import. They are themeable, lazy all the way down, and made
 for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agent backend works too.
 
+**Where it fits.** UI/UX is the presentation layer of the Jade stack: [Jade Vault](https://github.com/lucky-edgelord/jade-vault)
+is the control plane, [Jade Agent Base](https://github.com/lucky-edgelord/jade-agent-base) the resource plane,
+[Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit) the embeddable subset of Vault, and
+[Jade Agent Stack](https://github.com/lucky-edgelord/jade-agent-stack) the client toolkit that builds sites from these
+components (`jade site build`).
+
 - **`<jade-chat>`**: a complete agent chat. It streams text and thinking, shows tool calls (and asks before the tools
   you name), and has stop, regenerate, edit, retry, copy, suggestions and image attachments. It stays at the bottom
   unless the person scrolls up to read, with a "jump to latest" button, and screen readers hear one announcement per
@@ -14,7 +20,11 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 - **A catalog for agents**: [`dist/catalog.json`](dist/catalog.json) and [`dist/llms.txt`](dist/llms.txt) describe
   every element, prop, event, CSS part and surface component, so a coding agent can build pages with it too.
 - **Theming** with `--jade-*` design tokens: four presets, light/dark/auto, density, radius, `::part()`, and scoped themes.
-- **A storefront for Jade Agent Base**: `<jade-auth>` (sign in, sign up, reset), `<jade-pricing>` (plans with Stripe
+- **Dashboards**: `<jade-chart>` (line, area, bar, stacked, horizontal, donut, pie, sparkline) and, on surfaces, `Chart`,
+  `Stat` with a sparkline, and `Table` with sort, search, pages and formatted columns (currency, dates, status badges).
+- **A floating chat widget**: `<jade-chat-widget>`, a corner button that opens a chat panel for customer service or
+  any assistant; the chat loads on first open.
+- **A storefront for Jade Agent Base**: `<jade-auth>` (sign in, sign up, reset, and Continue with Google, Facebook, GitHub, …), `<jade-pricing>` (plans with Stripe
   Checkout) and `<jade-account>` (plan, usage against limits, the billing portal, API keys).
 - Also `<jade-markdown>` (safe, streaming), `<jade-code>`, `<jade-message>`, `<jade-composer>`, `<jade-tool-call>`
   and `<jade-theme-toggle>`.
@@ -22,12 +32,12 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 ## Quick start
 
 ```html
-<script type="module" src="https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.1.0/dist/jade-ui.js"></script>
+<script type="module" src="https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-ui-ux@v1.2.0/dist/jade-ui.js"></script>
 
 <jade-chat style="height:100vh" suggestions='["What can you do?", "Make me a form"]' attach></jade-chat>
 
 <script type="module">
-  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.0.0/dist/jade-agent-kit.js';
+  import { createKit } from 'https://cdn.jsdelivr.net/gh/lucky-edgelord/Jade-agent-kit@v3.1.0/dist/jade-agent-kit.js';
   const kit = await createKit({ ollamaKey: '…', persist: 'my-app' });
   await customElements.whenDefined('jade-chat');
   await document.querySelector('jade-chat').connect(kit, { brain: true, approve: ['bash', 'write', 'edit'] });
@@ -36,7 +46,7 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 
 `connect(kit, options)` makes a kit agent (`kit.agent(options)`). It adds approval cards for the tools in `approve`,
 and the UI tools with a short guide to the catalog in the system prompt (`ui: false` turns that off). Always pin a
-version (`@v1.1.0`). Open [`examples/index.html`](examples/index.html) for a demo that runs without a model.
+version (`@v1.2.0`). Open [`examples/index.html`](examples/index.html) for a demo that runs without a model.
 
 ### Any other backend
 
@@ -115,6 +125,33 @@ jade-surface::part(card) { border-width: 2px; }
 
 Events: `jade-run`, `jade-done`, `jade-tool`, `jade-action`, `jade-approval`, and `jade-send` without a backend.
 
+## Dashboards
+
+```html
+<jade-chart type="area" title="Revenue" x="month" format="currency"
+  data='[{"month":"Jan","revenue":1200,"costs":800},{"month":"Feb","revenue":1540,"costs":890}]'></jade-chart>
+```
+
+Agents build whole dashboards as surfaces: a `Grid` of `Card`s holding `Stat` (`spark: [..]`), `Chart`
+(`type`, `data: {"$data": "/sales"}`, `stacked`, `horizontal`, `format`) and `Table` (`search`, `pageSize`,
+`columns[].format`: `currency`, `date`, `badge` with `tones`). Charts redraw when bound data changes and when resized,
+show values on hover and with the arrow keys, and give screen readers a table. The chart code loads only when a chart is
+used. Series colours: `--jade-chart-1` … `--jade-chart-8`.
+
+## A floating chat widget
+
+```html
+<jade-chat-widget title="Acme support" subtitle="We reply in minutes" greeting="Hi! How can we help?"
+  suggestions='["Where is my order?", "Talk to a person"]'></jade-chat-widget>
+<script type="module">
+  const w = document.querySelector('jade-chat-widget');
+  w.handler = async (text, reply) => { reply.append('…'); };   // any backend, or: await w.connect(kit, { model, system })
+</script>
+```
+
+Only the button loads with the page; `<jade-chat>` loads when the panel first opens. `position="bottom-left"`,
+`--jade-widget-width` / `--jade-widget-height` and `::part(button)` change where and how it shows.
+
 ## A storefront for Jade Agent Base
 
 [Jade Agent Base](https://github.com/lucky-edgelord/jade-agent-base) lets an agent run a business that sells model
@@ -132,8 +169,12 @@ access: plans, Stripe billing and API keys. Three elements give its customers th
 - Errors from the server appear on the fields they are about. Signed out, Subscribe fires `jade-needs-signin`.
 - A new API key is shown once, with Copy.
 - `navigate` (a property) changes how Checkout and the portal open; the default is the same tab.
-- In code: `const base = await baseClient(url)`, then `signIn`, `signUp`, `plans`, `usage`, `keys`, `createKey`,
-  `checkout`, `portal`.
+- **Sign in with Google, Facebook, GitHub, Apple, Microsoft, Discord, …** (OAuth2): when the server has a provider on
+  (an agent calls `auth_provider_set`; Jade Agent Base 0.5+), `<jade-auth>` shows "Continue with …" for it. A small
+  window opens at the provider and closes when they are done; PocketBase does the OAuth2 exchange. With password
+  sign-in off, only the provider buttons show.
+- In code: `const base = await baseClient(url)`, then `signIn`, `signUp`, `providers`, `signInWith('google')`, `plans`,
+  `usage`, `keys`, `createKey`, `checkout`, `portal`.
 
 ## UI an agent builds: surfaces
 

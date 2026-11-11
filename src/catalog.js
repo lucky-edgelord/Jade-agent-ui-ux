@@ -18,6 +18,20 @@ export const ELEMENTS = {
     slots: { header: 'above the conversation', empty: 'replaces the empty state' },
     parts: ['log', 'list', 'empty', 'suggestions', 'jump', 'composer', 'message', 'bubble', 'text', 'thinking', 'actions', 'name', 'error', 'composer-form', 'composer-input', 'composer-send'],
   },
+  'jade-chat-widget': {
+    description: 'A floating chat button in a corner that opens a chat panel (customer service, help desks, sales, an assistant on any page). The <jade-chat> inside loads on the first open; on small screens the panel fills the screen. Esc closes; a reply that arrives while closed shows a dot.',
+    attributes: { title: 'panel heading (default "Chat with us")', subtitle: 'line under it', greeting: 'empty-state heading', suggestions: 'JSON array of starter prompts', placeholder: 'composer placeholder', label: "the button's accessible name", position: 'bottom-right | bottom-left', open: 'open (reflects)' },
+    properties: { handler: 'async (text, reply, ctx) => … (as <jade-chat>)' },
+    methods: { 'open()': '', 'close()': '', 'toggle()': '', 'chat()': '→ Promise of the inner <jade-chat>', 'connect(kit, opts)': 'a Jade Agent Kit agent (as <jade-chat>.connect)', 'send(text)': 'open and send as the person' },
+    events: { 'jade-open': '', 'jade-close': '' }, parts: ['button', 'panel', 'header', 'close', 'chat'],
+    css: { '--jade-widget-width': '380px', '--jade-widget-height': '560px', '--jade-widget-offset': '20px', '--jade-widget-z': '2147483000' },
+  },
+  'jade-chart': {
+    description: 'A chart for dashboards: line, area, bar (grouped, stacked or horizontal), donut, pie or sparkline, drawn as SVG with the theme. Hover or arrow keys show values; screen readers get a table of the numbers. Redraws on resize.',
+    attributes: { type: 'line | area | bar | donut | pie | sparkline', data: 'JSON rows, e.g. [{"month":"Jan","signups":30}]', x: 'the category key (default: the first text key)', series: 'keys to plot: "a,b" or JSON [{key,label,color}] (default: every number key)', format: 'number | compact | percent | currency | currency:EUR', title: 'heading', height: 'px (default 240)', stacked: 'stack bars or areas', horizontal: 'horizontal bars', legend: 'true | false', 'center-label': 'donut: text under the total', empty: 'text with no data' },
+    properties: { data: 'the rows (instead of the attribute)', options: '{ stacked, horizontal, height, format, min, max, colors, zero, dots, center, centerLabel }' },
+    parts: ['title', 'chart'], css: { '--jade-chart-1 … --jade-chart-8': 'series colours' },
+  },
   'jade-message': {
     description: 'One chat turn. Assistant turns stream blocks: thinking, markdown text, tool calls and surfaces.',
     attributes: { role: 'user | assistant | system', name: 'label shown above it', actions: 'space-separated: copy edit regenerate', streaming: '(read-only) while streaming', kind: 'action for surface-action messages' },
@@ -53,10 +67,10 @@ export const ELEMENTS = {
   'jade-markdown': { description: 'Safe markdown (with copyable, highlighted code blocks).', attributes: { text: 'markdown (or the element\'s text content)' }, properties: { text: '' }, methods: { 'append(delta)': 'streaming' }, parts: ['content'] },
   'jade-code': { description: 'A code block with copy and highlighting.', attributes: { lang: '', code: 'or the text content' }, properties: { code: '', lang: '' }, parts: ['code', 'bar'] },
   'jade-auth': {
-    description: 'Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server; signed in, shows who and Sign out. Server field errors appear on their fields.',
+    description: 'Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server, plus a "Continue with …" button for each OAuth2 provider the server has on (Google, Facebook, GitHub, …; an agent turns them on with auth_provider_set). Signed in, shows who and Sign out. Server field errors appear on their fields.',
     attributes: { base: 'the server URL (else setBase(), <meta name="jade-base">, or this page)', mode: 'signin | signup | reset' },
     properties: { client: '(read-only) the Jade Agent Base client' }, methods: { 'show(mode)': 'switch between signin, signup and reset' },
-    events: { 'jade-auth': '{ user, mode } after signing in or up', 'jade-signout': '' }, parts: ['card', 'form', 'submit'],
+    events: { 'jade-auth': '{ user, mode } after signing in or up (mode: signin, signup or the provider name)', 'jade-signout': '' }, parts: ['card', 'form', 'submit', 'providers', 'provider'],
   },
   'jade-pricing': {
     description: "The server's plans as cards (price, limits), the user's plan marked, and Subscribe buttons that open Stripe Checkout.",

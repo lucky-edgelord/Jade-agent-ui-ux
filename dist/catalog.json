@@ -1,5 +1,5 @@
 {
- "version": "1.1.0",
+ "version": "1.2.0",
  "name": "jade-agent-ui-ux",
  "elements": {
   "jade-chat": {
@@ -63,6 +63,75 @@
     "composer-input",
     "composer-send"
    ]
+  },
+  "jade-chat-widget": {
+   "description": "A floating chat button in a corner that opens a chat panel (customer service, help desks, sales, an assistant on any page). The <jade-chat> inside loads on the first open; on small screens the panel fills the screen. Esc closes; a reply that arrives while closed shows a dot.",
+   "attributes": {
+    "title": "panel heading (default \"Chat with us\")",
+    "subtitle": "line under it",
+    "greeting": "empty-state heading",
+    "suggestions": "JSON array of starter prompts",
+    "placeholder": "composer placeholder",
+    "label": "the button's accessible name",
+    "position": "bottom-right | bottom-left",
+    "open": "open (reflects)"
+   },
+   "properties": {
+    "handler": "async (text, reply, ctx) => … (as <jade-chat>)"
+   },
+   "methods": {
+    "open()": "",
+    "close()": "",
+    "toggle()": "",
+    "chat()": "→ Promise of the inner <jade-chat>",
+    "connect(kit, opts)": "a Jade Agent Kit agent (as <jade-chat>.connect)",
+    "send(text)": "open and send as the person"
+   },
+   "events": {
+    "jade-open": "",
+    "jade-close": ""
+   },
+   "parts": [
+    "button",
+    "panel",
+    "header",
+    "close",
+    "chat"
+   ],
+   "css": {
+    "--jade-widget-width": "380px",
+    "--jade-widget-height": "560px",
+    "--jade-widget-offset": "20px",
+    "--jade-widget-z": "2147483000"
+   }
+  },
+  "jade-chart": {
+   "description": "A chart for dashboards: line, area, bar (grouped, stacked or horizontal), donut, pie or sparkline, drawn as SVG with the theme. Hover or arrow keys show values; screen readers get a table of the numbers. Redraws on resize.",
+   "attributes": {
+    "type": "line | area | bar | donut | pie | sparkline",
+    "data": "JSON rows, e.g. [{\"month\":\"Jan\",\"signups\":30}]",
+    "x": "the category key (default: the first text key)",
+    "series": "keys to plot: \"a,b\" or JSON [{key,label,color}] (default: every number key)",
+    "format": "number | compact | percent | currency | currency:EUR",
+    "title": "heading",
+    "height": "px (default 240)",
+    "stacked": "stack bars or areas",
+    "horizontal": "horizontal bars",
+    "legend": "true | false",
+    "center-label": "donut: text under the total",
+    "empty": "text with no data"
+   },
+   "properties": {
+    "data": "the rows (instead of the attribute)",
+    "options": "{ stacked, horizontal, height, format, min, max, colors, zero, dots, center, centerLabel }"
+   },
+   "parts": [
+    "title",
+    "chart"
+   ],
+   "css": {
+    "--jade-chart-1 … --jade-chart-8": "series colours"
+   }
   },
   "jade-message": {
    "description": "One chat turn. Assistant turns stream blocks: thinking, markdown text, tool calls and surfaces.",
@@ -229,7 +298,7 @@
    ]
   },
   "jade-auth": {
-   "description": "Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server; signed in, shows who and Sign out. Server field errors appear on their fields.",
+   "description": "Sign in, create an account and reset a password on a Jade Agent Base (PocketBase) server, plus a \"Continue with …\" button for each OAuth2 provider the server has on (Google, Facebook, GitHub, …; an agent turns them on with auth_provider_set). Signed in, shows who and Sign out. Server field errors appear on their fields.",
    "attributes": {
     "base": "the server URL (else setBase(), <meta name=\"jade-base\">, or this page)",
     "mode": "signin | signup | reset"
@@ -241,13 +310,15 @@
     "show(mode)": "switch between signin, signup and reset"
    },
    "events": {
-    "jade-auth": "{ user, mode } after signing in or up",
+    "jade-auth": "{ user, mode } after signing in or up (mode: signin, signup or the provider name)",
     "jade-signout": ""
    },
    "parts": [
     "card",
     "form",
-    "submit"
+    "submit",
+    "providers",
+    "provider"
    ]
   },
   "jade-pricing": {
@@ -874,6 +945,10 @@
     "help": {
      "type": "string",
      "description": "small text below"
+    },
+    "spark": {
+     "type": "array",
+     "description": "recent values for a small trend line, e.g. [3,5,4,8]"
     }
    }
   },
@@ -901,7 +976,7 @@
    "props": {
     "columns": {
      "type": "array",
-     "description": "[{ \"key\": \"name\", \"label\": \"Name\", \"align\": \"start|end|center\" }] (default: the first row's keys)"
+     "description": "[{ \"key\": \"name\", \"label\": \"Name\", \"align\": \"start|end|center\", \"format\": \"number|compact|percent|currency|currency:EUR|date|datetime|badge\", \"tones\": {\"paid\": \"ok\"} }] (default: the first row's keys)"
     },
     "rows": {
      "type": "array",
@@ -911,6 +986,89 @@
     "empty": {
      "type": "string",
      "description": "text when there are no rows"
+    },
+    "sortable": {
+     "type": "boolean",
+     "description": "sort by clicking a header (default true)"
+    },
+    "search": {
+     "type": "boolean",
+     "description": "a search box over the rows"
+    },
+    "pageSize": {
+     "type": "number",
+     "description": "rows per page (default: all, up to 500)"
+    }
+   }
+  },
+  "Chart": {
+   "group": "charts",
+   "description": "A chart for dashboards: line, area, bar (grouped, stacked or horizontal), donut, pie or sparkline. Hover or arrow keys show values; screen readers get a table.",
+   "props": {
+    "type": {
+     "type": "string",
+     "enum": [
+      "line",
+      "area",
+      "bar",
+      "donut",
+      "pie",
+      "sparkline"
+     ],
+     "description": "default line"
+    },
+    "data": {
+     "type": "array",
+     "description": "rows like [{\"month\":\"Jan\",\"signups\":30,\"paid\":4}] or a binding {\"$data\": \"/sales\"}; for a donut, rows of {label, value}",
+     "required": true
+    },
+    "x": {
+     "type": "string",
+     "description": "the key of the category/date (default: the first text key)"
+    },
+    "series": {
+     "type": "array",
+     "description": "keys to plot, or [{ \"key\", \"label\", \"color\" }] (default: every number key)"
+    },
+    "title": {
+     "type": "string",
+     "description": "heading"
+    },
+    "format": {
+     "type": "string",
+     "description": "number | compact | percent | currency | currency:EUR"
+    },
+    "height": {
+     "type": "number",
+     "description": "px (default 240)"
+    },
+    "stacked": {
+     "type": "boolean",
+     "description": "stack bars or areas"
+    },
+    "horizontal": {
+     "type": "boolean",
+     "description": "horizontal bars"
+    },
+    "min": {
+     "type": "number",
+     "description": "axis minimum"
+    },
+    "max": {
+     "type": "number",
+     "description": "axis maximum"
+    },
+    "legend": {
+     "type": "boolean",
+     "description": "show the legend (default: with 2+ series)"
+    },
+    "centerLabel": {
+     "type": "string",
+     "description": "donut: text under the total"
+    },
+    "empty": {
+     "type": "string",
+     "description": "text with no data"
     }
    }
   },

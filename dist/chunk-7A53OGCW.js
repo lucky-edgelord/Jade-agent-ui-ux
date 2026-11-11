@@ -1,4 +1,4 @@
-/*! Jade Agent UI/UX 1.1.0 | MIT | https://github.com/lucky-edgelord/Jade-agent-ui-ux */
+/*! Jade Agent UI/UX 1.2.0 | MIT | https://github.com/lucky-edgelord/Jade-agent-ui-ux */
 var t=`
 :host{display:block}
 .card{border:1px solid var(--jade-border);background:var(--jade-surface);border-radius:var(--jade-radius);padding:calc(var(--jade-space) * 2.5);box-shadow:var(--jade-shadow)}
@@ -27,4 +27,4 @@ input[aria-invalid=true]{border-color:var(--jade-danger)}
 .skel{height:1em;border-radius:6px;background:var(--jade-surface-2);animation:p 1.2s ease-in-out infinite}
 @keyframes p{50%{opacity:.5}}
 `;async function i(e,r){let o=[...e.childNodes];e.disabled=!0,e.setAttribute("aria-busy","true");let a=document.createElement("span");a.className="spin",a.setAttribute("aria-hidden","true"),e.prepend(a);try{return await r()}finally{e.disabled=!1,e.removeAttribute("aria-busy"),e.replaceChildren(...o)}}var d=(e,r="USD")=>{try{return new Intl.NumberFormat(void 0,{style:"currency",currency:r,maximumFractionDigits:e%1?2:0}).format(e)}catch{return`${e} ${r}`}},n=e=>Number(e||0).toLocaleString();export{t as a,i as b,d as c,n as d};
-//# sourceMappingURL=chunk-FH6B4IKD.js.map
+//# sourceMappingURL=chunk-7A53OGCW.js.map
