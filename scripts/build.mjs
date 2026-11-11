@@ -11,6 +11,7 @@ export const ENTRIES = {
   'jade-ui': 'src/index.js', theme: 'src/theme.js', chat: 'src/chat.js', message: 'src/message.js', composer: 'src/composer.js', 'tool-call': 'src/tool-call.js',
   markdown: 'src/markdown.js', code: 'src/code.js', highlight: 'src/highlight.js', surface: 'src/surface.js', 'theme-toggle': 'src/theme-toggle.js',
   catalog: 'src/catalog.js', 'agent-tools': 'src/agent-tools.js',
+  auth: 'src/auth.js', pricing: 'src/pricing.js', account: 'src/account.js', 'base-client': 'src/base-client.js',
   'surface/layout': 'src/surface/layout.js', 'surface/content': 'src/surface/content.js', 'surface/inputs': 'src/surface/inputs.js', 'surface/data': 'src/surface/data.js',
   'themes/midnight': 'src/themes/midnight.js', 'themes/paper': 'src/themes/paper.js', 'themes/contrast': 'src/themes/contrast.js',
 };

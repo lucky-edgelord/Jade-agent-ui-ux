@@ -4,7 +4,7 @@
 // Each element's module also works on its own (import '…/dist/chat.js'), and nothing else is fetched until used.
 import { setTheme, getTheme, PRESETS, TOKENS } from './theme.js';
 export { setTheme, getTheme, PRESETS, TOKENS };
-export const VERSION = '1.0.0';
+export const VERSION = '1.1.0';
 
 /** every element and the module that defines it */
 export const ELEMENTS = {
@@ -16,6 +16,9 @@ export const ELEMENTS = {
   'jade-code': () => import('./code.js'),
   'jade-surface': () => import('./surface.js'),
   'jade-theme-toggle': () => import('./theme-toggle.js'),
+  'jade-auth': () => import('./auth.js'),
+  'jade-pricing': () => import('./pricing.js'),
+  'jade-account': () => import('./account.js'),
 };
 const pending = new Map();
 /** load elements by tag ('jade-chat', or 'chat'): resolves when they are defined */
@@ -40,6 +43,10 @@ export function stopAutoload() { observer?.disconnect(); observer = null; }
 
 /** the component catalog for agents (elements, surface components, spec format): loads catalog.js */
 export async function catalog() { return (await import('./catalog.js')); }
+/** the Jade Agent Base server the account elements use (unless they have a `base` attribute): loads base-client.js */
+export async function setBase(url) { (await import('./base-client.js')).setBase(url); }
+/** the client for a Jade Agent Base server (sign in, plans, usage, keys, checkout): loads base-client.js */
+export async function baseClient(url) { return (await import('./base-client.js')).baseClient(url); }
 /** tools for a Jade Agent Kit agent to build UI (ui_render, ui_update, …): loads agent-tools.js */
 export async function uiTools(o) { return (await import('./agent-tools.js')).uiTools(o); }
 
