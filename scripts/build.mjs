@@ -8,11 +8,11 @@ const pkg = JSON.parse(fs.readFileSync(new URL('../package.json', import.meta.ur
 const src = fs.readFileSync(new URL('../src/index.js', import.meta.url), 'utf8');
 if (!src.includes(`VERSION = '${pkg.version}'`)) throw new Error(`src/index.js VERSION does not match package.json (${pkg.version})`);
 export const ENTRIES = {
-  'jade-ui': 'src/index.js', theme: 'src/theme.js', chat: 'src/chat.js', 'chat-widget': 'src/chat-widget.js', message: 'src/message.js', composer: 'src/composer.js', 'tool-call': 'src/tool-call.js',
+  'jade-ui': 'src/index.js', theme: 'src/theme.js', chat: 'src/chat.js', 'chat-widget': 'src/chat-widget.js', chart: 'src/chart.js', 'chart-core': 'src/chart-core.js', message: 'src/message.js', composer: 'src/composer.js', 'tool-call': 'src/tool-call.js',
   markdown: 'src/markdown.js', code: 'src/code.js', highlight: 'src/highlight.js', surface: 'src/surface.js', 'theme-toggle': 'src/theme-toggle.js',
   catalog: 'src/catalog.js', 'agent-tools': 'src/agent-tools.js',
   auth: 'src/auth.js', pricing: 'src/pricing.js', account: 'src/account.js', 'base-client': 'src/base-client.js',
-  'surface/layout': 'src/surface/layout.js', 'surface/content': 'src/surface/content.js', 'surface/inputs': 'src/surface/inputs.js', 'surface/data': 'src/surface/data.js',
+  'surface/layout': 'src/surface/layout.js', 'surface/content': 'src/surface/content.js', 'surface/inputs': 'src/surface/inputs.js', 'surface/data': 'src/surface/data.js', 'surface/charts': 'src/surface/charts.js',
   'themes/midnight': 'src/themes/midnight.js', 'themes/paper': 'src/themes/paper.js', 'themes/contrast': 'src/themes/contrast.js',
 };
 const banner = `/*! Jade Agent UI/UX ${pkg.version} | MIT | https://github.com/lucky-edgelord/Jade-agent-ui-ux */`;

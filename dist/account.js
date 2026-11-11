@@ -1,5 +1,5 @@
 /*! Jade Agent UI/UX 1.2.0 | MIT | https://github.com/lucky-edgelord/Jade-agent-ui-ux */
-import{a as j,b as m,c as b,d as u}from"./chunk-7A53OGCW.js";import{b as C}from"./chunk-6EYF6PHZ.js";import{a as k,b as w,c as e,d as x,e as _}from"./chunk-REXY427J.js";import"./chunk-I43RMOTQ.js";var f=class extends k{static styles=j+`
+import{a as j,b as m,c as b,d as u}from"./chunk-7A53OGCW.js";import{b as C}from"./chunk-6EYF6PHZ.js";import{a as k,b as w,c as e,d as x,e as _}from"./chunk-CXEGVF4L.js";import"./chunk-5PLB4KF2.js";var f=class extends k{static styles=j+`
 .stack{display:flex;flex-direction:column;gap:calc(var(--jade-space) * 2)}
 .meter{height:8px;border-radius:999px;background:var(--jade-surface-2);overflow:hidden;margin-top:6px}
 .meter i{display:block;height:100%;background:var(--jade-accent)}.meter i.hi{background:var(--jade-warn)}.meter i.full{background:var(--jade-danger)}

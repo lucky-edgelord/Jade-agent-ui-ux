@@ -14,6 +14,8 @@ for [Jade Agent Kit](https://github.com/lucky-edgelord/Jade-agent-kit). Any agen
 - **A catalog for agents**: [`dist/catalog.json`](dist/catalog.json) and [`dist/llms.txt`](dist/llms.txt) describe
   every element, prop, event, CSS part and surface component, so a coding agent can build pages with it too.
 - **Theming** with `--jade-*` design tokens: four presets, light/dark/auto, density, radius, `::part()`, and scoped themes.
+- **Dashboards**: `<jade-chart>` (line, area, bar, stacked, horizontal, donut, pie, sparkline) and, on surfaces, `Chart`,
+  `Stat` with a sparkline, and `Table` with sort, search, pages and formatted columns (currency, dates, status badges).
 - **A floating chat widget**: `<jade-chat-widget>`, a corner button that opens a chat panel for customer service or
   any assistant; the chat loads on first open.
 - **A storefront for Jade Agent Base**: `<jade-auth>` (sign in, sign up, reset, and Continue with Google, Facebook, GitHub, …), `<jade-pricing>` (plans with Stripe
@@ -116,6 +118,19 @@ jade-surface::part(card) { border-width: 2px; }
 | Input | Grows with the text; Enter sends, Shift+Enter is a new line; attach, paste or drop images (`attach`); sends while busy are queued. |
 
 Events: `jade-run`, `jade-done`, `jade-tool`, `jade-action`, `jade-approval`, and `jade-send` without a backend.
+
+## Dashboards
+
+```html
+<jade-chart type="area" title="Revenue" x="month" format="currency"
+  data='[{"month":"Jan","revenue":1200,"costs":800},{"month":"Feb","revenue":1540,"costs":890}]'></jade-chart>
+```
+
+Agents build whole dashboards as surfaces: a `Grid` of `Card`s holding `Stat` (`spark: [..]`), `Chart`
+(`type`, `data: {"$data": "/sales"}`, `stacked`, `horizontal`, `format`) and `Table` (`search`, `pageSize`,
+`columns[].format`: `currency`, `date`, `badge` with `tones`). Charts redraw when bound data changes and when resized,
+show values on hover and with the arrow keys, and give screen readers a table. The chart code loads only when a chart is
+used. Series colours: `--jade-chart-1` … `--jade-chart-8`.
 
 ## A floating chat widget
 

@@ -26,6 +26,12 @@ export const ELEMENTS = {
     events: { 'jade-open': '', 'jade-close': '' }, parts: ['button', 'panel', 'header', 'close', 'chat'],
     css: { '--jade-widget-width': '380px', '--jade-widget-height': '560px', '--jade-widget-offset': '20px', '--jade-widget-z': '2147483000' },
   },
+  'jade-chart': {
+    description: 'A chart for dashboards: line, area, bar (grouped, stacked or horizontal), donut, pie or sparkline, drawn as SVG with the theme. Hover or arrow keys show values; screen readers get a table of the numbers. Redraws on resize.',
+    attributes: { type: 'line | area | bar | donut | pie | sparkline', data: 'JSON rows, e.g. [{"month":"Jan","signups":30}]', x: 'the category key (default: the first text key)', series: 'keys to plot: "a,b" or JSON [{key,label,color}] (default: every number key)', format: 'number | compact | percent | currency | currency:EUR', title: 'heading', height: 'px (default 240)', stacked: 'stack bars or areas', horizontal: 'horizontal bars', legend: 'true | false', 'center-label': 'donut: text under the total', empty: 'text with no data' },
+    properties: { data: 'the rows (instead of the attribute)', options: '{ stacked, horizontal, height, format, min, max, colors, zero, dots, center, centerLabel }' },
+    parts: ['title', 'chart'], css: { '--jade-chart-1 … --jade-chart-8': 'series colours' },
+  },
   'jade-message': {
     description: 'One chat turn. Assistant turns stream blocks: thinking, markdown text, tool calls and surfaces.',
     attributes: { role: 'user | assistant | system', name: 'label shown above it', actions: 'space-separated: copy edit regenerate', streaming: '(read-only) while streaming', kind: 'action for surface-action messages' },

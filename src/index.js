@@ -10,6 +10,7 @@ export const VERSION = '1.2.0';
 export const ELEMENTS = {
   'jade-chat': () => import('./chat.js'),
   'jade-chat-widget': () => import('./chat-widget.js'),
+  'jade-chart': () => import('./chart.js'),
   'jade-message': () => import('./message.js'),
   'jade-composer': () => import('./composer.js'),
   'jade-tool-call': () => import('./tool-call.js'),

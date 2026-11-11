@@ -37,5 +37,5 @@ ok(await ev(() => getComputedStyle(document.querySelector('#scoped jade-markdown
 ok(await ev(() => getComputedStyle(document.querySelector('jade-markdown').shadowRoot.querySelector('.md')).getPropertyValue('--jade-accent').trim().length > 0), 'tokens reach inside shadow roots');
 // catalog lazily
 const cat = await ev(async () => { const c = await UI.catalog(); return { n: Object.keys(c.COMPONENTS).length, p: c.prompt().length, el: Object.keys(c.ELEMENTS).length }; });
-ok(cat.n >= 25 && cat.el === 12 && cat.p > 2000, `catalog: ${cat.n} components, ${cat.el} elements, prompt ${cat.p} chars`);
+ok(cat.n >= 25 && cat.el === 13 && cat.p > 2000, `catalog: ${cat.n} components, ${cat.el} elements, prompt ${cat.p} chars`);
 await t.done();

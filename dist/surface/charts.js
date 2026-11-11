@@ -1,0 +1,3 @@
+/*! Jade Agent UI/UX 1.2.0 | MIT | https://github.com/lucky-edgelord/Jade-agent-ui-ux */
+import{a as l,f as h}from"../chunk-UYNKYCRQ.js";var m={Chart(t){let s=t.h("div",{class:"chart"}),a=t.h("h3",{class:"chart-t"}),r=t.h("div");s.append(a,r);let i=t.h("style");i.textContent=l,s.append(i);let o=null,p=()=>{let e=t.get("title");a.textContent=e||"",a.hidden=!e;let n={};for(let c of["type","x","series","format","height","stacked","horizontal","min","max","empty","legend","centerLabel"]){let d=t.get(c);d!=null&&(n[c]=d)}n.data=t.get("data",[]),n.title=e,o?o.update(n):o=h(r,n)};for(let e of["data","type","series","title","x"])t.bind(e,p);return requestAnimationFrame(()=>o?.update({})),s}};export{m as default};
+//# sourceMappingURL=charts.js.map
